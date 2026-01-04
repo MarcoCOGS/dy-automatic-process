@@ -1,0 +1,32 @@
+{
+  "description": "Acceda a su cuenta",
+  "form": {
+    "email": {
+      "label": "Correo electrónico",
+      "placeholder": "",
+      "errors": {
+        "required": "Correo electrónico es requerido",
+        "max": "Correo electrónico debe tener un máximo de 100 caracteres"
+      }
+    },
+    "password": {
+      "label": "Contraseña",
+      "placeholder": "",
+      "errors": {
+        "required": "Contraseña es requerido",
+        "max": "Contraseña debe tener un máximo de 32 caracteres"
+      }
+    },
+    "submit": "Iniciar sesión"
+  },
+  "messages": {
+    "incorrectCredentials": "Correo electrónico o contraseña incorrectos. Por favor, inténtalo de nuevo.",
+    "userNotVerified": "Tu cuenta no ha sido verificada. Por favor, revisa tu correo electrónico para verificar tu cuenta.",
+    "userDisabled": "Tu cuenta ha sido desactivada. Por favor, contacta con soporte para más información.",
+    "userLocked": "Tu cuenta está bloqueada. Por favor, inténtalo de nuevo en {{lockDuration}} minutos",
+    "tooManyAttempts": "Demasiados intentos fallidos. Por favor, inténtalo de nuevo en 15 minutos."
+  },
+  "links": {
+    "requestPasswordReset": "¿Ha olvidado su contraseña?"
+  }
+}

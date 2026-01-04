@@ -1,0 +1,6 @@
+{
+  "messages": {
+    "success": "Dirección de correo electrónico verificada correctamente.",
+    "failure": "Token de verificación no válido o caducado."
+  }
+}

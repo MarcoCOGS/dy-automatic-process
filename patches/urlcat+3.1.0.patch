@@ -1,0 +1,14 @@
+diff --git a/node_modules/urlcat/package.json b/node_modules/urlcat/package.json
+index 6c09937..a6d5728 100644
+--- a/node_modules/urlcat/package.json
++++ b/node_modules/urlcat/package.json
+@@ -12,7 +12,8 @@
+   "exports": {
+     ".": {
+       "import": "./dist/index.mjs",
+-      "require": "./dist/index.js"
++      "require": "./dist/index.js",
++      "types": "./dist/index.d.ts"
+     },
+     "./package.json": "./package.json"
+   },

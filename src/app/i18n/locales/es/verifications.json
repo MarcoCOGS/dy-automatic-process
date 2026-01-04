@@ -1,0 +1,136 @@
+{
+  "verificationStates": {
+    "PENDING": "Pendiente",
+    "PROGRESS": "Progreso",
+    "IDENTITY_VERIFICATION": "Verificación de identidad",
+    "DONE": "Terminado",
+    "EXPIRED": "Expirado",
+    "CANCELED": "Cancelado"
+  },
+  "verificationViews": {
+    "START": "Inicio",
+    "GPS_GEOLOCATION": "Geolocalización por GPS",
+    "HOME_INFORMATION": "Información domiciliaria",
+    "CAPTURE_IMAGES": "Captura de imágenes",
+    "IDENTITY_VERIFICATION": "Verificación de identidad",
+    "DASHBOARD": "Dashboard",
+    "END": "Fin"
+  },
+  "verificationPropertyStatus": {
+    "1": "Propia",
+    "2": "Alquilada",
+    "3": "Familiar"
+  },
+  "verificationResidenceDuration": {
+    "1": "Menos de 1 año",
+    "2": "De 1 a 5 años",
+    "3": "Más de 5 años"
+  },
+  "verificationResidenceType": {
+    "1": "Casa",
+    "2": "Departamento",
+    "3": "Habitación",
+    "4": "Quinta"
+  },
+  "verificationLivesAtAddress": {
+    "1": "Sí",
+    "2": "No"
+  },
+  "verificationFiles": {
+    "house_number_photo": "Número de puerta",
+    "house_front_photo": "Frente de la casa",
+    "utility_bill_photo": "Recibo de luz o agua",
+    "id_card_front_photo": "Foto del DNI",
+    "id_card_back_photo": "Foto posterior del DNI",
+    "selfie_photo": "Foto Selfie",
+    "map_distance_image": "Mapa",
+    "identity_proof_document": "Documento de prueba de identidad",
+    "verification_document": "Documento de verificación"
+  },
+  "verificationList": {
+    "title": "Lista de verificaciones",
+    "description": "Lista de verificaciones de la organización",
+    "table": {
+      "header": {
+        "code": "Código",
+        "paternalLastName": "Apellido paterno",
+        "maternalLastName": "Apellido materno",
+        "names": "Nombre",
+        "fullName": "Nombre completo",
+        "documentType": "Tipo documento",
+        "documentNumber": "Número de documento",
+        "streetAddress": "Dirección",
+        "urbanization": "Urbanización",
+        "references": "Referencias",
+        "district": "Distrito",
+        "province": "Provincia",
+        "region": "Departamento",
+        "ubigeo": "Ubigeo",
+        "phoneNumber": "Teléfono",
+        "email": "Correo electrónico",
+        "state": "Estado",
+        "view": "Vista",
+        "createdAt": "Fecha de creación",
+        "expirationDate": "Fecha de expiración",
+        "openedAt": "Fecha de apertura",
+        "expirationFromOpenDate": "Fecha de expiración desde la fecha de apertura",
+        "propertyStatus": "Situación propiedad",
+        "livesAtAddress": "¿Actualmente reside en la dirección indicada?",
+        "residenceType": "Tipo de residencia",
+        "residenceDuration": "Tiempo de residencia",
+        "coordinateDistance": "Cálculo de distancia (MTS)"
+      }
+    }
+  },
+  "verificationDetail": {
+    "title": "Detalle de verificación",
+    "description": "Detalle de verificación de la organización",
+    "fields": {
+      "code": "Código",
+      "paternalLastName": "Apellido paterno",
+      "maternalLastName": "Apellido materno",
+      "names": "Nombre",
+      "fullName": "Nombre completo",
+      "documentType": "Tipo documento",
+      "documentNumber": "Número de documento",
+      "streetAddress": "Dirección",
+      "urbanization": "Urbanización",
+      "references": "Referencias",
+      "district": "Distrito",
+      "province": "Provincia",
+      "region": "Departamento",
+      "ubigeo": "Ubigeo",
+      "phoneNumber": "Teléfono",
+      "email": "Correo electrónico",
+      "state": "Estado",
+      "view": "Vista",
+      "createdAt": "Fecha de creación",
+      "expirationDate": "Fecha de expiración",
+      "openedAt": "Fecha de apertura",
+      "expirationFromOpenDate": "Fecha de expiración desde la fecha de apertura",
+      "propertyStatus": "Situación propiedad",
+      "livesAtAddress": "¿Actualmente reside en la dirección indicada?",
+      "residenceType": "Tipo de residencia",
+      "residenceDuration": "Tiempo de residencia",
+      "coordinateDistance": "Cálculo de distancia (MTS)"
+    },
+    "sections": {
+      "files": {
+        "title": "Documentos adjuntos"
+      }
+    }
+  },
+  "buttons": {
+    "requestVerifications": "Solicitar verificaciones",
+    "download": "Descargar",
+    "view": "Ver",
+    "request": "Solicitar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "save": "Guardar",
+    "create": "Crear",
+    "update": "Actualizar"
+  }
+}

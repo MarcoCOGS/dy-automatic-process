@@ -1,0 +1,90 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+// datasource db {
+//   provider          = "mysql"
+//   url               = env("DATABASE_URL")
+//   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+// }
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  username       String       @unique
+  password       String
+  phone          String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("users")
+}
+
+model Organization {
+  id                    String                @id @default(uuid())
+  name                  String
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  users                 User[]
+  classificationBatches ClassificationBatch[]
+
+  @@map("organizations")
+}
+
+model ClassificationBatch {
+  id             String               @id @default(uuid())
+  groupId        String
+  state          String
+  comment        String?
+  page           Int
+  totalPage      Int
+  organizationId String
+  organization   Organization         @relation(fields: [organizationId], references: [id])
+  items          ClassificationItem[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([groupId])
+  @@map("classification_batches")
+}
+
+model ClassificationItem {
+  id                   String              @id @default(uuid())
+  itemNumber           Int?
+  brand                String?
+  model                String?
+  commercialName       String?
+  description          String?
+  material             String?
+  mainUse              String?
+  commercialQuantity   Int?
+  unitType             String?
+  countryOfOrigin      String?
+  countryOfAcquisition String?
+  condition            String?
+  unitPrice            Float?
+  totalPrice           Float?
+  referenceCountry     String?
+  suggestedHsCode      String?
+  batchId              String
+  batch                ClassificationBatch @relation(fields: [batchId], references: [id])
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@map("classification_items")
+}

@@ -1,0 +1,82 @@
+{
+  "inviteUserForm": {
+    "title": "Invitar usuario",
+    "description": "Invitar un nuevo usuario a la organización",
+    "form": {
+      "email": {
+        "label": "Correo electrónico",
+        "placeholder": "Correo electrónico",
+        "errors": {
+          "required": "Correo electrónico es requerido",
+          "max": "Correo electrónico debe tener un máximo de 100 caracteres"
+        }
+      },
+      "submit": "Invitar"
+    }
+  },
+  "registerUserForm": {
+    "title": "Registrarse",
+    "description": "Registrarse como nuevo usuario",
+    "form": {
+      "firstName": {
+        "label": "Nombres",
+        "placeholder": "",
+        "errors": {
+          "required": "Campo obligatorio"
+        }
+      },
+      "lastName": {
+        "label": "Apellidos",
+        "placeholder": "",
+        "errors": {
+          "required": "Campo obligatorio"
+        }
+      },
+      "password": {
+        "label": "Nueva contraseña",
+        "placeholder": "",
+        "errors": {
+          "required": "Campo obligatorio",
+          "format": "Formato incorrecto"
+        },
+        "checklist": {
+          "minLength": "Tiene un mínimo de 8 caracteres",
+          "maxLength": "Tiene un máximo de 32 caracteres",
+          "capital": "Al menos una letra mayúscula",
+          "lowercase": "Al menos una letra minúscula",
+          "number": "Al menos un dígito",
+          "specialChar": "Al menos un carácter especial (#?!@$%^&*-)",
+          "match": "Las contraseñas coinciden"
+        }
+      },
+      "confirmPassword": {
+        "label": "Confirmar contraseña",
+        "placeholder": "",
+        "errors": {
+          "required": "Campo obligatorio",
+          "notMatch": "Las contraseñas no coinciden"
+        }
+      },
+      "submit": "Registrarse"
+    },
+    "messages": {
+      "success": "Se estableció correctamente una nueva contraseña.",
+      "invalidToken": "Token inválido o expirado."
+    }
+  },
+  "userInvitationsList": {
+    "title": "Lista de invitaciones de usuarios",
+    "description": "Lista de invitaciones de usuarios a la organización",
+    "table": {
+      "header": {
+        "email": "Correo electrónico del invitado",
+        "invitedBy": "Invitado por",
+        "createdAt": "Fecha de invitación",
+        "expiresAt": "Expira el"
+      }
+    }
+  },
+  "buttons": {
+    "inviteUser": "Invitar usuario"
+  }
+}

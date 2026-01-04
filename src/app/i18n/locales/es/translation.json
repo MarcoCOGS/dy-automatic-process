@@ -1,0 +1,22 @@
+{
+  "title": "Moon Global",
+  "organization": "Organización",
+  "addOrganization": "Agregar organización",
+  "messages": {
+    "serverError": "Ha ocurrido un error en el servidor. Por favor, inténtalo de nuevo más tarde.",
+    "emptyFields": "Por favor, completa todos los campos requeridos.",
+    "unknownError": "Ha ocurrido un error desconocido. Por favor, inténtalo de nuevo."
+  },
+  "buttons": {
+    "download": "Descargar",
+    "back": "Volver"
+  },
+  "toast": {
+    "download_started": "Descarga iniciada",
+    "download_description": "Tu archivo se está descargando...",
+    "undo": "Deshacer"
+  },
+  "links": {
+    "backToLogin": "Volver al inicio de sesión"
+  }
+}

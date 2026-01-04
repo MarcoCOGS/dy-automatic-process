@@ -1,0 +1,19 @@
+{
+  "userStates": {
+    "PENDING": "Pendiente",
+    "ACTIVE": "Activo",
+    "LOCKED": "Bloqueado"
+  },
+  "userList": {
+    "title": "Lista de usuarios",
+    "description": "Lista de usuarios de la organización",
+    "table": {
+      "header": {
+        "email": "Correo electrónico",
+        "firstName": "Nombre",
+        "lastName": "Apellido",
+        "state": "Estado"
+      }
+    }
+  }
+}

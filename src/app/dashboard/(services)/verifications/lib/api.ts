@@ -1,0 +1,149 @@
+'use server';
+
+import axios from 'axios';
+import _ from 'lodash';
+import { v4 as uuidv4 } from 'uuid';
+
+import {
+  CreateManyVerificationsRequest,
+  FindManyVerificationsRequest,
+  GenerateReportResponse,
+  GenerateSignedGetUrlRequest,
+  GenerateSignedGetUrlResponse,
+  GenerateSignedPutUrlRequest,
+  GenerateSignedPutUrlResponse,
+  PostSendFilesToN8nRequest,
+  Verification,
+} from './definitions';
+import { ServerConfig } from './server-config';
+import { getSession } from '@/lib/session';
+
+const apiVerifications = axios.create({
+  baseURL: ServerConfig.apiVerificationsBaseUrl,
+  auth: {
+    username: ServerConfig.apiVerificationsUsername,
+    password: ServerConfig.apiVerificationsPassword,
+  },
+});
+
+export const findManyVerifications = async (request: FindManyVerificationsRequest): Promise<Verification[]> => {
+  try {
+    const response = await apiVerifications.post('/v1/secure/verifications', {
+      params: {
+        cursorTake: request.cursorTake,
+        cursorCode: request.cursorCode,
+        code: request.code,
+        authorId: request.authorId,
+        organizationId: request.organizationId,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    const message = _.get(error, 'response.data.message', (error as Error).message);
+
+    throw new Error(message);
+  }
+};
+
+export const createManyVerifications = async (request: CreateManyVerificationsRequest): Promise<void> => {
+  const response = await apiVerifications.post('/v1/secure/verifications/create-many', {
+    key: request.key,
+    authorId: request.authorId,
+    organizationId: request.organizationId,
+  });
+
+  return response.data;
+};
+
+export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Promise<void> => {
+  const fd = new FormData();
+
+  // Deben coincidir con los keys del webhook (Postman)
+  fd.append('1_invoice', request.files.invoiceFile);
+
+  if (request.files?.productPhotosFile) {
+    fd.append('1_productPhotos', request.files.productPhotosFile[0]); // solo 1
+  }
+
+  if (request.files.extraInfoFile) {
+    fd.append('1_extraInfo', request.files.extraInfoFile);
+  }
+
+  const response = await apiVerifications.post('/webhook-test/1aa636c8-6dcc-4216-be58-5f09c61de135',
+  fd,
+  {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'batch-id': uuidv4()
+    },
+  }
+  );
+
+  return response.data;
+};
+
+export const generateSignedGetUrl = async (
+  request: GenerateSignedGetUrlRequest,
+): Promise<GenerateSignedGetUrlResponse> => {
+  try {
+    const response = await apiVerifications.post('/v1/secure/verifications/generate-signed-get-url', {
+      key: request.key,
+      bucket: request.bucket,
+    });
+
+    return response.data;
+  } catch (error) {
+    const message = _.get(error, 'response.data.message', (error as Error).message);
+
+    throw new Error(message);
+  }
+};
+
+export const generateSignedPutUrl = async (
+  request: GenerateSignedPutUrlRequest,
+): Promise<GenerateSignedPutUrlResponse> => {
+  try {
+    const response = await apiVerifications.post('/v1/secure/verifications/generate-signed-put-url', {
+      fileName: request.fileName,
+      folder: request.folder,
+    });
+
+    return response.data;
+  } catch (error) {
+    const message = _.get(error, 'response.data.message', (error as Error).message);
+
+    throw new Error(message);
+  }
+};
+
+export const generateDefaultReport = async (): Promise<GenerateReportResponse> => {
+
+  try {
+    const session = await getSession();
+    const response = await apiVerifications.post(
+      '/v1/reports/generate/default',
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-report-notification': 'PUSH',
+          'x-push-channel': 'reports-channel',
+          'x-user-role': 'ROBOT',
+          'x-push-event': 'report-generated',
+          'x-author-id': session?.user.id,
+          'x-organization-id': session?.organization.id,
+        },
+        auth: {
+          username: 'robot',
+          password: 'XgK80IkcxtUbzUwHCkUyRVjsTybu',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    const message = _.get(error, 'response.data.message', (error as Error).message);
+    throw new Error(message);
+  }
+};
