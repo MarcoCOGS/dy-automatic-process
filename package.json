@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write --ignore-path .gitignore .",
-    "postinstall": "patch-package"
+    "postinstall": "prisma generate && patch-package"
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",
