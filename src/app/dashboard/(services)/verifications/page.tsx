@@ -2,7 +2,7 @@ import { translation } from '@/app/i18n';
 import { ability } from '@/lib/abilities';
 import { getSession } from '@/lib/session';
 
-import { DownloadVerifications } from './ui/buttons';
+// import { DownloadVerifications } from './ui/buttons';
 import RequestVerifications from './ui/request-verifications';
 import VerificationList from './ui/verification-list';
 
@@ -30,7 +30,7 @@ export default async function Page() {
         <div className='flex items-center justify-between'>
           <div className='flex space-x-2'>
             {abilities.can('create-many', 'verifications') && <RequestVerifications />}
-            {abilities.can('download', 'verifications') && <DownloadVerifications />}
+            {/* {abilities.can('download', 'verifications') && <DownloadVerifications />} */}
           </div>
         </div>
         <VerificationList userId={session.user.id} roleId={session.role.id} organizationId={session.organization.id} />

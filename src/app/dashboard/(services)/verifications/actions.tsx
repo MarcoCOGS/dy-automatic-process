@@ -4,13 +4,20 @@ import axios from 'axios';
 
 import { getSession } from '@/lib/session';
 import { tryCatch } from '@/lib/try-catch';
+import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from '@prisma/client';
 
 import * as api from './lib/api';
 
 type ValidationError = {
   index: number;
   errors: string[];
+  batchId: string;
 };
+
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 function formatErrorMessages(errors: ValidationError[]): string {
   const groupedErrors: Record<number, string[]> = errors.reduce(
@@ -31,7 +38,8 @@ function formatErrorMessages(errors: ValidationError[]): string {
     .join('\n\n');
 }
 
-export async function requestVerifications(formData: FormData): Promise<{ success: boolean; message: string }> {
+export const requestVerifications = async(formData: FormData): Promise<{ success: boolean; message: string, batchId?: string }> =>{
+  console.log('aca requestVerifications server')
   const session = await getSession();
 
   if (!session) {
@@ -58,9 +66,11 @@ export async function requestVerifications(formData: FormData): Promise<{ succes
   //     'Content-Type': signedPutUrl.contentType,
   //   },
   // });
+  const batchId = uuidv4();
 
   const response = await tryCatch(
     api.postSendFilesToN8n({
+      batchId,
       files: {
         invoiceFile: invoice,
         productPhotosFile: productPhotos,
@@ -87,6 +97,44 @@ export async function requestVerifications(formData: FormData): Promise<{ succes
 
   return {
     success: true,
+    batchId,
     message: 'Verifications created successfully.',
+  };
+}
+
+export const checkBatchStatusAction = async(
+  batchId: string
+): Promise<{ success: boolean; message: string; batchId?: string }> => {
+  console.log('aca checkBatchStatusAction server')
+  const session = await getSession();
+
+  if (!session) {
+    return {
+      success: false,
+      message: 'You must be logged in.',
+    };
+  }
+
+  const batch = await prisma.classificationBatch.findUnique({
+    where: { id: batchId },
+    select: { state: true, id: true },
+  });
+
+  if (!batch) {
+    return { success: false, message: 'Batch not found.' };
+  }
+
+  if (batch.state !== 'DONE') {
+    return {
+      success: false,
+      batchId: batch.id,
+      message: `Batch still processing (${batch.state}).`,
+    };
+  }
+
+  return {
+    success: true,
+    batchId: batch.id,
+    message: 'Batch is DONE.',
   };
 }

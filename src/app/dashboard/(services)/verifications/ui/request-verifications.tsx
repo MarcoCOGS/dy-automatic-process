@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, FilePlus2Icon, Loader2 } from 'lucide-react';
 import mime from 'mime-types';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -25,8 +25,8 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { tryCatch } from '@/lib/try-catch';
+import { checkBatchStatusAction, requestVerifications } from '../actions';
 
-import { requestVerifications } from '../actions';
 
 const fileSizeLimit = 1024 * 1024 * 10;
 
@@ -96,18 +96,24 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function RequestVerifications() {
   const { t } = useTranslation('es', 'verifications');
+  const submittingRef = useRef(false);
   console.log(t)
   const [isPending, startTransition] = useTransition();
-  const [isPending2, startTransition2] = useTransition();
+  // const [isPending2, startTransition2] = useTransition();
   const router = useRouter();
-  const [hasEverSucceeded, setHasEverSucceeded] = useState(false);
+  // const [hasEverSucceeded, setHasEverSucceeded] = useState(false);
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false)
+  const [batchId, setBatchId] = useState<undefined | string | null>(null)
+  const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
 
   function onSubmit(data: FormValues) {
+    if (submittingRef.current) return;
+  submittingRef.current = true;
     startTransition(async () => {
       const formData = new FormData();
 
@@ -132,7 +138,7 @@ export default function RequestVerifications() {
       if (extraFile) {
         formData.append('extraInfo', extraFile);
       }
-
+      console.log('aca requestVerifications client')
       const response = await tryCatch(requestVerifications(formData));
 
       if (response.error) {
@@ -146,36 +152,79 @@ export default function RequestVerifications() {
           });
 
           setMessage('');
-          setHasEverSucceeded(true);
+          // setHasEverSucceeded(true);
+          setIsLoading(true)
+          setOpen(false)
+          setBatchId(response.data.batchId)
         } else {
           setMessage(response.data.message);
         }
 
-        form.reset();
+        // form.reset();
       }
     });
   }
 
-  function onOpenChange(open: boolean) {
-    if (open) {
-      setMessage('');
-    } else {
-      form.reset();
+  // function onOpenChange(open: boolean) {
+  //   if (open) {
+  //     setMessage('');
+  //   } else {
+  //     form.reset();
 
-      if (hasEverSucceeded) {
-        startTransition2(() => {
-          setMessage('');
+  //     // if (hasEverSucceeded) {
+  //     //   startTransition2(() => {
+  //     //     setMessage('');
+  //     //     router.refresh();
+  //     //   });
+  //     // }
+  //   }
+  // }
+
+useEffect(() => {
+  if (!batchId) return;
+
+  let cancelled = false;
+  let timeoutId: NodeJS.Timeout;
+
+  const poll = async () => {
+    try {
+      console.log('aca checkBatchStatusAction client')
+      const response = await tryCatch(checkBatchStatusAction(batchId));
+
+      if (response?.data?.success) {
+        if (!cancelled) {
+          setBatchId(null);
+          setIsLoading(false)
           router.refresh();
-        });
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        timeoutId = setTimeout(poll, 2000);
+      }
+    } catch (error) {
+      console.error(error);
+
+      if (!cancelled) {
+        timeoutId = setTimeout(poll, 2000);
       }
     }
-  }
+  };
+
+  poll();
+
+  return () => {
+    cancelled = true;
+    if (timeoutId) clearTimeout(timeoutId);
+  };
+}, [batchId]);
 
   return (
     <>
-      <Dialog onOpenChange={onOpenChange}>
+      <Dialog onOpenChange={setOpen} open={open}>
         <DialogTrigger asChild>
-          <Button variant='outline'>
+          <Button variant='outline' type='submit' onClick={() => setOpen(true)}>
             <FilePlus2Icon />
             Solicitar Verificaciones
           </Button>
@@ -275,7 +324,12 @@ export default function RequestVerifications() {
           )}
         </DialogContent>
       </Dialog>
-      <Backdrop open={isPending2} variant='blur'>
+      {/* <Backdrop open={isPending2} variant='blur'>
+        <div className='animate-pulse'>
+          <Loader2 className='h-12 w-12 animate-spin text-primary' />
+        </div>
+      </Backdrop> */}
+      <Backdrop open={isLoading} variant='blur'>
         <div className='animate-pulse'>
           <Loader2 className='h-12 w-12 animate-spin text-primary' />
         </div>

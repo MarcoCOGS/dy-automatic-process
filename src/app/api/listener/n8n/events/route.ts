@@ -1,7 +1,6 @@
 // app/api/productos/route.ts
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -39,9 +38,9 @@ type Producto = {
 
 type Resumen = { total_cantidad: number; total_valor: number };
 
-// ✅ TU PAYLOAD REAL (sin items[])
 type PayloadBody = {
   productos: Producto[];
+  batchId: string;
   total_productos: number;
   resumen: Resumen;
 };
@@ -102,7 +101,6 @@ export async function POST(req: Request) {
 
   try {
     body = await req.json();
-    console.log('aca 123', body)
   } catch {
     return NextResponse.json({ ok: false, error: 'Body inválido: se esperaba JSON.' }, { status: 400 });
   }
@@ -119,8 +117,6 @@ export async function POST(req: Request) {
 
   // ✅ por ahora hardcode
   const organizationId = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
-
-  const batchId = uuidv4();
 
   // Aplanar productos -> rows
   const rows = body.productos.map((p) => ({
@@ -140,7 +136,7 @@ export async function POST(req: Request) {
     totalPrice: p.precio_total,
     referenceCountry: p.pais_adquisicion,
     suggestedHsCode: p.partida_arancelaria,
-    batchId,
+    batchId: body.batchId,
   }));
 
   try {
@@ -148,13 +144,12 @@ export async function POST(req: Request) {
       // 1) crear batch (ajusta campos si tu schema exige más)
       await tx.classificationBatch.create({
         data: {
-          id: batchId,
+          id: body.batchId,
           groupId: '',
-          state: '',
+          state: 'PENDING',
           page: 0,
           totalPage: 0,
           organization: { connect: { id: organizationId } },
-          // Si tu batch tiene más campos NOT NULL, agrégalos aquí.
         },
       });
 
@@ -164,7 +159,7 @@ export async function POST(req: Request) {
       });
 
       await tx.classificationBatch.update({
-        where: { id: batchId },
+        where: { id: body.batchId },
         data: { state: 'DONE' },
       });
 
@@ -173,7 +168,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      batchId,
+      batchId: body.batchId,
       insertedCount,
       // opcional: info del payload
       received: {
@@ -183,7 +178,7 @@ export async function POST(req: Request) {
     });
   } catch (err) {
       await prisma.classificationBatch.update({
-        where: { id: batchId },
+        where: { id: body.batchId },
         data: { state: 'ERROR' },
       }).catch(() => {});
     return NextResponse.json(

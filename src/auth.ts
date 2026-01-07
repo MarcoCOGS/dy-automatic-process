@@ -78,10 +78,10 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
       return token;
     },
     session({ session, token }) {
-      console.log('aca t', token)
+      // console.log('aca t', token)
       session.user.id = token.id as string;
       session.user.orgId = String(token.orgId ?? '1');
-      console.log('aca acasession ', session)
+      // console.log('aca acasession ', session)
       return session;
     },
   },

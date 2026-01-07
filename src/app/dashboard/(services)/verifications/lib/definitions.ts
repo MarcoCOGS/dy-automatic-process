@@ -13,6 +13,7 @@ export interface CreateManyVerificationsRequest {
 }
 
 export interface PostSendFilesToN8nRequest {
+  readonly batchId: string;
   readonly files: {
     readonly invoiceFile: File;
     readonly productPhotosFile: File[];
@@ -63,49 +64,22 @@ export interface KeynuaIdentityVerification extends IdentityVerification {
 }
 
 export interface Verification {
-  readonly id: string;
-  readonly code: string;
-  readonly names: string;
-  readonly paternalLastName: string;
-  readonly maternalLastName: string;
-  readonly documentType: DocumentType;
-  readonly documentNumber: string;
-  readonly streetAddress: string;
-  readonly urbanization: string;
-  readonly references: string;
-  readonly district: string;
-  readonly province: string;
-  readonly region: string;
-  readonly ubigeo: string;
-  readonly phoneNumber: string;
-  readonly email: string;
-  readonly state: VerificationState;
-  readonly view: VerificationView;
-  readonly addressLatitude: number;
-  readonly addressLongitude: number;
-  readonly addressRef: string;
-  readonly timeZone: string;
-  readonly authorId: string;
-  readonly organizationId: string;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-  readonly expirationDate: string;
-  readonly startedAt?: string;
-  readonly openedAt?: string;
-  readonly expirationFromOpenDate?: string;
-  readonly termsAndConditions?: boolean;
-  readonly gpsLatitude?: number;
-  readonly gpsLongitude?: number;
-  readonly propertyStatus?: number;
-  readonly livesAtAddress?: number;
-  readonly residenceType?: number;
-  readonly residenceDuration?: number;
-  readonly files: S3Object[];
-  readonly identityVerification?: IdentityVerification;
-  readonly identityVerificationStartedAt?: string;
-  readonly identityVerificationFinishedAt?: string;
-  readonly finishedAt?: string;
-  readonly coordinateDistance?: number;
+  readonly itemNumber: number | null;
+  readonly brand: string | null;
+  readonly model: string | null;
+  readonly commercialName: string | null;
+  readonly description: string | null;
+  readonly material: string | null;
+  readonly mainUse: string | null;
+  readonly commercialQuantity: number | null;
+  readonly unitType: string | null;
+  readonly countryOfOrigin: string | null;
+  readonly countryOfAcquisition: string | null;
+  readonly condition: string | null;
+  readonly unitPrice: number | null;
+  readonly totalPrice: number | null;
+  readonly referenceCountry: string | null;
+  readonly suggestedHsCode: string | null;
 }
 
 export enum DocumentType {

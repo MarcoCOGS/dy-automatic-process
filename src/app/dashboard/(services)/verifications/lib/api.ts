@@ -2,11 +2,9 @@
 
 import axios from 'axios';
 import _ from 'lodash';
-import { v4 as uuidv4 } from 'uuid';
 
 import {
   CreateManyVerificationsRequest,
-  FindManyVerificationsRequest,
   GenerateReportResponse,
   GenerateSignedGetUrlRequest,
   GenerateSignedGetUrlResponse,
@@ -17,6 +15,7 @@ import {
 } from './definitions';
 import { ServerConfig } from './server-config';
 import { getSession } from '@/lib/session';
+import { PrismaClient } from '@prisma/client';
 
 const apiVerifications = axios.create({
   baseURL: ServerConfig.apiVerificationsBaseUrl,
@@ -26,19 +25,15 @@ const apiVerifications = axios.create({
   },
 });
 
-export const findManyVerifications = async (request: FindManyVerificationsRequest): Promise<Verification[]> => {
-  try {
-    const response = await apiVerifications.post('/v1/secure/verifications', {
-      params: {
-        cursorTake: request.cursorTake,
-        cursorCode: request.cursorCode,
-        code: request.code,
-        authorId: request.authorId,
-        organizationId: request.organizationId,
-      },
-    });
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-    return response.data;
+export const findManyVerifications = async (): Promise<Verification[]> => {
+  try {
+    const data = await prisma.classificationItem.findMany();
+
+    return data;
   } catch (error) {
     const message = _.get(error, 'response.data.message', (error as Error).message);
 
@@ -75,12 +70,26 @@ export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Pr
   {
     headers: {
       'Content-Type': 'multipart/form-data',
-      'batch-id': uuidv4()
+      'batch-id': request.batchId
     },
   }
   );
 
   return response.data;
+};
+
+export const getCheckBatchStatusById = async (request: { batchId: string }): Promise<GenerateSignedGetUrlResponse> => {
+  try {
+    const response = await apiVerifications.post('/v1/secure/verifications/check-batch-status-by-id', {
+      batchId: request.batchId,
+    });
+
+    return response.data;
+  } catch (error) {
+    const message = _.get(error, 'response.data.message', (error as Error).message);
+
+    throw new Error(message);
+  }
 };
 
 export const generateSignedGetUrl = async (

@@ -6,7 +6,7 @@ import { auth } from '@/auth';
 
 export async function getSession() {
   const session = await auth();
-  console.log('aca session', session)
+  // console.log('aca session', session)
 
   const userId = session?.user?.id;
   const orgId = session?.user?.orgId;
@@ -29,16 +29,16 @@ export async function getSession() {
   //     },
   //   },
   // });
-  console.log('acaaaaa')
+  // console.log('acaaaaa')
   if (!user) {
-    console.log('aca ddd')
+    // console.log('aca ddd')
     return null;
   }
-  console.log('aca 1',  {
-    user: { id: user.id },
-    organization: { id: user.organizationsUsers[0].organizationId },
-    role: { id: user.organizationsUsers[0].roleId },
-  })
+  // console.log('aca 1',  {
+  //   user: { id: user.id },
+  //   organization: { id: user.organizationsUsers[0].organizationId },
+  //   role: { id: user.organizationsUsers[0].roleId },
+  // })
   return {
     user: { id: user.id },
     organization: { id: user.organizationsUsers[0].organizationId },

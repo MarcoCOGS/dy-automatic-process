@@ -1,10 +1,9 @@
 import { translation } from '@/app/i18n';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 // import { ability } from '@/lib/abilities';
 
-// import { findManyVerifications } from '../lib/api';
-import { ViewVerification } from './buttons';
+import { findManyVerifications } from '../lib/api';
+// import { ViewVerification } from './buttons';
 
 export default async function VerificationList({
   // userId,
@@ -19,29 +18,7 @@ export default async function VerificationList({
 
   // const abilities = await ability(roleId);
 
-  // const verifications = await findManyVerifications({
-  //   cursorTake: 50,
-  //   authorId: abilities.can('view-all', 'verifications') ? undefined : userId.toString(),
-  //   organizationId: organizationId.toString(),
-  // });
-
-  const verifications = [
-    {
-      id: 1,
-      code: '123456789',
-      names: 'Juan',
-      paternalLastName: 'Perez',
-      maternalLastName: 'Garcia',
-      documentType: 'DNI',
-      documentNumber: '123456789',
-      streetAddress: 'Calle 123',
-      district: 'Distrito 1',
-      phoneNumber: '+34 678 987 654',
-      email: 'juan.perez@gmail.com',
-      state: 'PENDING',
-      view: 'START',
-    },
-  ];
+  const verifications = await findManyVerifications();
 
   return (
     <>
@@ -49,39 +26,47 @@ export default async function VerificationList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('verificationList.table.header.code')}</TableHead>
-              <TableHead>{t('verificationList.table.header.fullName')}</TableHead>
-              <TableHead>{t('verificationList.table.header.documentType')}</TableHead>
-              <TableHead>{t('verificationList.table.header.documentNumber')}</TableHead>
-              <TableHead>{t('verificationList.table.header.streetAddress')}</TableHead>
-              <TableHead>{t('verificationList.table.header.district')}</TableHead>
-              <TableHead>{t('verificationList.table.header.phoneNumber')}</TableHead>
-              <TableHead>{t('verificationList.table.header.email')}</TableHead>
-              <TableHead>{t('verificationList.table.header.state')}</TableHead>
-              <TableHead>{t('verificationList.table.header.view')}</TableHead>
+              <TableHead>{t('verificationList.table.header.itemNumber')}</TableHead>
+              <TableHead>{t('verificationList.table.header.brand')}</TableHead>
+              <TableHead>{t('verificationList.table.header.model')}</TableHead>
+              <TableHead>{t('verificationList.table.header.commercialName')}</TableHead>
+              <TableHead>{t('verificationList.table.header.description')}</TableHead>
+              <TableHead>{t('verificationList.table.header.material')}</TableHead>
+              <TableHead>{t('verificationList.table.header.mainUse')}</TableHead>
+              <TableHead>{t('verificationList.table.header.commercialQuantity')}</TableHead>
+              <TableHead>{t('verificationList.table.header.unitType')}</TableHead>
+              <TableHead>{t('verificationList.table.header.countryOfOrigin')}</TableHead>
+              <TableHead>{t('verificationList.table.header.countryOfAcquisition')}</TableHead>
+              <TableHead>{t('verificationList.table.header.condition')}</TableHead>
+              <TableHead>{t('verificationList.table.header.unitPrice')}</TableHead>
+              <TableHead>{t('verificationList.table.header.totalPrice')}</TableHead>
+              <TableHead>{t('verificationList.table.header.referenceCountry')}</TableHead>
+              <TableHead>{t('verificationList.table.header.suggestedHsCode')}</TableHead>
               <TableHead>&nbsp;</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {verifications.map((verification) => (
-              <TableRow key={verification.id}>
-                <TableCell>{verification.code}</TableCell>
-                <TableCell>
-                  {verification.names} {verification.paternalLastName} {verification.maternalLastName}
-                </TableCell>
-                <TableCell>{verification.documentType}</TableCell>
-                <TableCell>{verification.documentNumber}</TableCell>
-                <TableCell>{verification.streetAddress}</TableCell>
-                <TableCell>{verification.district}</TableCell>
-                <TableCell>{verification.phoneNumber}</TableCell>
-                <TableCell>{verification.email}</TableCell>
-                <TableCell>
-                  <Badge variant='secondary'>{t(`verificationStates.${verification.state}`)}</Badge>
-                </TableCell>
-                <TableCell>{t(`verificationViews.${verification.view}`)}</TableCell>
-                <TableCell>
+              <TableRow key={verification.itemNumber}>
+                <TableCell>{verification.itemNumber}</TableCell>
+                <TableCell>{verification.brand}</TableCell>
+                <TableCell>{verification.model}</TableCell>
+                <TableCell>{verification.commercialName}</TableCell>
+                <TableCell>{verification.description}</TableCell>
+                <TableCell>{verification.material}</TableCell>
+                <TableCell>{verification.mainUse}</TableCell>
+                <TableCell>{verification.commercialQuantity}</TableCell>
+                <TableCell>{verification.unitType}</TableCell>
+                <TableCell>{verification.countryOfOrigin}</TableCell>
+                <TableCell>{verification.countryOfAcquisition}</TableCell>
+                <TableCell>{verification.condition}</TableCell>
+                <TableCell>{verification.unitPrice}</TableCell>
+                <TableCell>{verification.totalPrice}</TableCell>
+                <TableCell>{verification.referenceCountry}</TableCell>
+                <TableCell>{verification.suggestedHsCode}</TableCell>
+                {/* <TableCell>
                   <ViewVerification code={verification.code} />
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

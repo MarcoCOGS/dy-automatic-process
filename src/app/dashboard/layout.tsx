@@ -21,7 +21,7 @@ export type LayoutProps = Readonly<{
 
 export default async function Layout({ children }: LayoutProps) {
   const session = await getSession();
-  console.log('aca' , session)
+  // console.log('aca' , session)
   if (!session) {
     return <div>Empty</div>;
   }
