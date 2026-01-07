@@ -1,27 +1,27 @@
-import { DateTime } from 'luxon';
+// import { DateTime } from 'luxon';
 
 import { translation } from '@/app/i18n';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import prisma from '@/lib/prisma';
+import { Table, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+// import prisma from '@/lib/prisma';
 
 export default async function UserInvitationsList({ organizationId }: { organizationId: number }) {
   const { t } = await translation('es', 'invitations');
-
-  const invitations = await prisma.invitation.findMany({
-    where: {
-      organizationId,
-      acceptedAt: null,
-      expiresAt: {
-        gt: new Date(),
-      },
-    },
-    include: {
-      author: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+  console.log(organizationId)
+  // const invitations = await prisma.invitation.findMany({
+  //   where: {
+  //     organizationId,
+  //     acceptedAt: null,
+  //     expiresAt: {
+  //       gt: new Date(),
+  //     },
+  //   },
+  //   include: {
+  //     author: true,
+  //   },
+  //   orderBy: {
+  //     createdAt: 'desc',
+  //   },
+  // });
 
   return (
     <>
@@ -35,7 +35,7 @@ export default async function UserInvitationsList({ organizationId }: { organiza
               <TableHead>{t('userInvitationsList.table.header.expiresAt')}</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          {/* <TableBody>
             {invitations.map((invitation) => (
               <TableRow key={invitation.id}>
                 <TableCell>{invitation.email}</TableCell>
@@ -52,7 +52,7 @@ export default async function UserInvitationsList({ organizationId }: { organiza
                 </TableCell>
               </TableRow>
             ))}
-          </TableBody>
+          </TableBody> */}
         </Table>
       </div>
       {/* <div className='flex items-center justify-end space-x-2 py-4'>

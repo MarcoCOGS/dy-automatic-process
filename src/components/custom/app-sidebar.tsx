@@ -61,7 +61,13 @@ export function AppSidebar({
   return (
     <Sidebar collapsible='icon'>
       <SidebarHeader>
-        <TeamSwitcher teams={teams} activeTeamId={activeOrganizationId} />
+        <TeamSwitcher
+          teams={teams.map(team => ({
+            ...team,
+            id: parseInt(team.id, 10),
+          }))}
+          activeTeamId={activeOrganizationId}
+        />
       </SidebarHeader>
       <SidebarContent>
         <NavProjects title='Servicios' projects={services} />

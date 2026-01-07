@@ -1,12 +1,12 @@
 'use server';
 
-import argon2 from 'argon2';
+// import argon2 from 'argon2';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 import { z } from 'zod';
 
 import { translation } from '@/app/i18n';
-import prisma from '@/lib/prisma';
+// import prisma from '@/lib/prisma';
 import redis from '@/lib/redis';
 
 export type ConfirmPasswordResetState = {
@@ -66,7 +66,7 @@ export async function confirmPasswordReset(
     };
   }
 
-  const { token, password } = validatedFields.data;
+  const { token } = validatedFields.data;
 
   try {
     const userId = await redis.get(token);
@@ -78,14 +78,14 @@ export async function confirmPasswordReset(
       };
     }
 
-    await prisma.user.update({
-      where: {
-        id: parseInt(userId),
-      },
-      data: {
-        password: await argon2.hash(password),
-      },
-    });
+    // await prisma.user.update({
+    //   where: {
+    //     id: parseInt(userId),
+    //   },
+    //   data: {
+    //     password: await argon2.hash(password),
+    //   },
+    // });
 
     await redis.del(token);
 

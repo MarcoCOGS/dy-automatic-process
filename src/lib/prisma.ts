@@ -6,10 +6,10 @@ const prismaClientSingleton = () => {
       user: {
         fullName: {
           needs: {
-            firstName: true,
-            lastName: true,
+            firstName: true as never,
+            lastName: true as never,
           },
-          compute(user) {
+          compute(user: { firstName: string; lastName: string }) {
             return user.firstName + ' ' + user.lastName;
           },
         },

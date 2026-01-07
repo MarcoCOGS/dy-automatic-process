@@ -1,10 +1,10 @@
-import { UserStates } from '@prisma/client';
+// import { UserStates } from '@prisma/client';
 import Link from 'next/link';
 
 import { translation } from '@/app/i18n';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import prisma from '@/lib/prisma';
+// import prisma from '@/lib/prisma';
 import redis from '@/lib/redis';
 
 export type PageProps = Readonly<{
@@ -26,14 +26,14 @@ export default async function Page(props: PageProps) {
       throw new Error('Invalid token');
     }
 
-    await prisma.user.update({
-      where: {
-        id: parseInt(userId),
-      },
-      data: {
-        state: UserStates.ACTIVE,
-      },
-    });
+    // await prisma.user.update({
+    //   where: {
+    //     id: parseInt(userId),
+    //   },
+    //   data: {
+    //     state: UserStates.ACTIVE,
+    //   },
+    // });
 
     result = 'success';
   } catch (error) {
