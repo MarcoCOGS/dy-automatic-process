@@ -15,7 +15,7 @@ export default async function Page() {
     return <div>Empty</div>;
   }
 
-  const abilities = await ability(session.role.id);
+  const abilities = await ability();
 
   return (
     <div className='h-full flex-1 flex-col space-y-8 p-8 md:flex'>

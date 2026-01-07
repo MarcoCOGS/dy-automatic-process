@@ -4,7 +4,7 @@ import { defineAbility } from '@casl/ability';
 
 // import prisma from './prisma';
 
-export const ability = async (roleId: number) => {
+export const ability = async () => {
   // const records = await prisma.role.findMany({
   //   where: {
   //     id: roleId,
