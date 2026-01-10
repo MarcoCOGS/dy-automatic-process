@@ -79,6 +79,23 @@ const formSchema = z
                 !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
               'Alguna foto supera el tamaño máximo de 10MB.',
             ),
+    productPhotos1:
+      typeof window === 'undefined'
+        ? z.any()
+        : z
+            .instanceof(FileList)
+            .refine((files) => files.length >= 1, 'Debes subir al menos una foto de producto.')
+            .refine(
+              (files) =>
+                !files.length ||
+                Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
+              'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
+            )
+            .refine(
+              (files) =>
+                !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
+              'Alguna foto supera el tamaño máximo de 10MB.',
+            ),
 
     // Info adicional (opcional)
     extraInfo:
@@ -132,6 +149,11 @@ export default function RequestVerifications() {
       const photoFiles = data.productPhotos?.[0];
       if (photoFiles) {
         formData.append('productPhotos', photoFiles);
+      }
+
+      const photoFiles1 = data.productPhotos1?.[0];
+      if (photoFiles1) {
+        formData.append('productPhotos1', photoFiles1);
       }
 
       const extraFile = data.extraInfo?.[0];
@@ -265,6 +287,28 @@ useEffect(() => {
               <FormField
                 control={form.control}
                 name='productPhotos'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fotos de Productos</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='file'
+                        multiple
+                        accept='image/*'
+                        disabled={isPending}
+                        onChange={(e) => field.onChange(e.target.files)}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormDescription>Puedes subir varias imágenes | Tamaño máximo por imagen: 10MB.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='productPhotos1'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Fotos de Productos</FormLabel>

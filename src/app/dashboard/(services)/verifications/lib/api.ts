@@ -65,7 +65,11 @@ export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Pr
     fd.append('1_extraInfo', request.files.extraInfoFile);
   }
 
-  const response = await apiVerifications.post('/webhook-test/1aa636c8-6dcc-4216-be58-5f09c61de135',
+  if (request.files.productPhotosFile1) {
+    fd.append('1_productPhotos1', request.files.productPhotosFile1); // solo 1
+  }
+
+  const response = await apiVerifications.post('/webhook/1aa636c8-6dcc-4216-be58-5f09c61de135',
   fd,
   {
     headers: {
