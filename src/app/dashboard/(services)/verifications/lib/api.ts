@@ -68,8 +68,8 @@ export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Pr
   if (request.files.productPhotosFile1) {
     fd.append('1_productPhotos1', request.files.productPhotosFile1); // solo 1
   }
-
-  const response = await apiVerifications.post('/webhook-test/1aa636c8-6dcc-4216-be58-5f09c61de135',
+  try {
+    const response = await apiVerifications.post(ServerConfig.webhookPath,
   fd,
   {
     headers: {
@@ -77,9 +77,11 @@ export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Pr
       'batch-id': request.batchId
     },
   }
-  );
-
-  return response.data;
+    );
+    return response.data;
+  } catch (error) {
+      console.log(error)
+  }
 };
 
 export const getCheckBatchStatusById = async (request: { batchId: string }): Promise<GenerateSignedGetUrlResponse> => {
