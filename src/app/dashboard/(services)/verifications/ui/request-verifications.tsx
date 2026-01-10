@@ -32,12 +32,12 @@ const fileSizeLimit = 1024 * 1024 * 10;
 
 const xlsxFileType = mime.lookup('xlsx') as string;
 const pdfFileType = mime.lookup('pdf') as string;
-const imageTypes = [
-  mime.lookup('jpg') as string,
-  mime.lookup('jpeg') as string,
-  mime.lookup('png') as string,
-  mime.lookup('webp') as string,
-];
+// const imageTypes = [
+//   mime.lookup('jpg') as string,
+//   mime.lookup('jpeg') as string,
+//   mime.lookup('png') as string,
+//   mime.lookup('webp') as string,
+// ];
 
 const formSchema = z
   .object({
@@ -62,51 +62,51 @@ const formSchema = z
             ),
 
     // Fotos de productos (al menos 1 imagen)
-    productPhotos:
-      typeof window === 'undefined'
-        ? z.any()
-        : z
-            .instanceof(FileList)
-            .refine((files) => files.length >= 1, 'Debes subir al menos una foto de producto.')
-            .refine(
-              (files) =>
-                !files.length ||
-                Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
-              'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
-            )
-            .refine(
-              (files) =>
-                !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
-              'Alguna foto supera el tamaño máximo de 10MB.',
-            ),
-    productPhotos1:
-      typeof window === 'undefined'
-        ? z.any()
-        : z
-            .instanceof(FileList)
-            .refine((files) => files.length >= 1, 'Debes subir al menos una foto de producto.')
-            .refine(
-              (files) =>
-                !files.length ||
-                Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
-              'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
-            )
-            .refine(
-              (files) =>
-                !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
-              'Alguna foto supera el tamaño máximo de 10MB.',
-            ),
+    // productPhotos:
+    //   typeof window === 'undefined'
+    //     ? z.any()
+    //     : z
+    //         .instanceof(FileList)
+    //         .refine((files) => files.length >= 1, 'Debes subir al menos una foto de producto.')
+    //         .refine(
+    //           (files) =>
+    //             !files.length ||
+    //             Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
+    //           'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
+    //         )
+    //         .refine(
+    //           (files) =>
+    //             !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
+    //           'Alguna foto supera el tamaño máximo de 10MB.',
+    //         ),
+    // productPhotos1:
+    //   typeof window === 'undefined'
+    //     ? z.any()
+    //     : z
+    //         .instanceof(FileList)
+    //         .refine((files) => files.length >= 1, 'Debes subir al menos una foto de producto.')
+    //         .refine(
+    //           (files) =>
+    //             !files.length ||
+    //             Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
+    //           'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
+    //         )
+    //         .refine(
+    //           (files) =>
+    //             !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
+    //           'Alguna foto supera el tamaño máximo de 10MB.',
+    //         ),
 
     // Info adicional (opcional)
-    extraInfo:
-      typeof window === 'undefined'
-        ? z.any()
-        : z
-            .instanceof(FileList)
-            .refine(
-              (files) => !files.length || files[0].size <= fileSizeLimit,
-              'El archivo adicional es demasiado grande. Máximo 10MB.',
-            ),
+    // extraInfo:
+    //   typeof window === 'undefined'
+    //     ? z.any()
+    //     : z
+    //         .instanceof(FileList)
+    //         .refine(
+    //           (files) => !files.length || files[0].size <= fileSizeLimit,
+    //           'El archivo adicional es demasiado grande. Máximo 10MB.',
+    //         ),
   });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -146,20 +146,20 @@ export default function RequestVerifications() {
       //   });
       // }
 
-      const photoFiles = data.productPhotos?.[0];
-      if (photoFiles) {
-        formData.append('productPhotos', photoFiles);
-      }
+      // const photoFiles = data.productPhotos?.[0];
+      // if (photoFiles) {
+      //   formData.append('productPhotos', photoFiles);
+      // }
 
-      const photoFiles1 = data.productPhotos1?.[0];
-      if (photoFiles1) {
-        formData.append('productPhotos1', photoFiles1);
-      }
+      // const photoFiles1 = data.productPhotos1?.[0];
+      // if (photoFiles1) {
+      //   formData.append('productPhotos1', photoFiles1);
+      // }
 
-      const extraFile = data.extraInfo?.[0];
-      if (extraFile) {
-        formData.append('extraInfo', extraFile);
-      }
+      // const extraFile = data.extraInfo?.[0];
+      // if (extraFile) {
+      //   formData.append('extraInfo', extraFile);
+      // }
       console.log('aca requestVerifications client')
       const response = await tryCatch(requestVerifications(formData));
 
@@ -284,7 +284,7 @@ useEffect(() => {
               />
 
               {/* Fotos de productos */}
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name='productPhotos'
                 render={({ field }) => (
@@ -304,32 +304,10 @@ useEffect(() => {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name='productPhotos1'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fotos de Productos</FormLabel>
-                    <FormControl>
-                      <Input
-                        type='file'
-                        multiple
-                        accept='image/*'
-                        disabled={isPending}
-                        onChange={(e) => field.onChange(e.target.files)}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormDescription>Puedes subir varias imágenes | Tamaño máximo por imagen: 10MB.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              /> */}
 
               {/* Información adicional */}
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name='extraInfo'
                 render={({ field }) => (
@@ -347,7 +325,7 @@ useEffect(() => {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               <DialogFooter>
                 <Button disabled={isPending} type='submit'>

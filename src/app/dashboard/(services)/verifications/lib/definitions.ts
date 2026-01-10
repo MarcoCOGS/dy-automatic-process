@@ -16,9 +16,8 @@ export interface PostSendFilesToN8nRequest {
   readonly batchId: string;
   readonly files: {
     readonly invoiceFile: File;
-    readonly productPhotosFile: File[];
-    readonly extraInfoFile: File | null;
-    readonly productPhotosFile1: File | null;
+    readonly productPhotosFile?: File[];
+    readonly extraInfoFile?: File | null;
   }
 }
 

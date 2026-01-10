@@ -57,17 +57,17 @@ export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Pr
   // Deben coincidir con los keys del webhook (Postman)
   fd.append('1_invoice', request.files.invoiceFile);
 
-  if (request.files?.productPhotosFile) {
-    fd.append('1_productPhotos', request.files.productPhotosFile[0]); // solo 1
-  }
+  // if (request.files?.productPhotosFile) {
+  //   fd.append('1_productPhotos', request.files.productPhotosFile[0]); // solo 1
+  // }
 
-  if (request.files.extraInfoFile) {
-    fd.append('1_extraInfo', request.files.extraInfoFile);
-  }
+  // if (request.files.extraInfoFile) {
+  //   fd.append('1_extraInfo', request.files.extraInfoFile);
+  // }
 
-  if (request.files.productPhotosFile1) {
-    fd.append('1_productPhotos1', request.files.productPhotosFile1); // solo 1
-  }
+  // if (request.files.productPhotosFile1) {
+  //   fd.append('1_productPhotos1', request.files.productPhotosFile1); // solo 1
+  // }
   try {
     const response = await apiVerifications.post(ServerConfig.webhookPath,
   fd,

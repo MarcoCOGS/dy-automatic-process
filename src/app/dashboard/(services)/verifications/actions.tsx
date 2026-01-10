@@ -51,9 +51,9 @@ export const requestVerifications = async(formData: FormData): Promise<{ success
 
   const invoice = formData.get('invoice') as File | null;
   if (!invoice) return { success: false, message: 'Debes subir la factura.' };
-  const productPhotos = formData.getAll('productPhotos') as File[];
-  const extraInfo = (formData.get('extraInfo') as File | null) ?? null
-  const productPhotos1 = (formData.get('productPhotos1') as File | null) ?? null
+  // const productPhotos = formData.getAll('productPhotos') as File[];
+  // const extraInfo = (formData.get('extraInfo') as File | null) ?? null
+  // const productPhotos1 = (formData.get('productPhotos1') as File | null) ?? null
 
   // const signedPutUrl = await api.generateSignedPutUrl({
   //   fileName: file.name,
@@ -74,9 +74,9 @@ export const requestVerifications = async(formData: FormData): Promise<{ success
       batchId,
       files: {
         invoiceFile: invoice,
-        productPhotosFile: productPhotos,
-        extraInfoFile: extraInfo,
-        productPhotosFile1: productPhotos1
+        // productPhotosFile: productPhotos,
+        // extraInfoFile: extraInfo,
+        // productPhotosFile1: productPhotos1
       }
     }),
   );
