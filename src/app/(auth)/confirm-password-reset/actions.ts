@@ -7,7 +7,6 @@ import { z } from 'zod';
 
 import { translation } from '@/app/i18n';
 // import prisma from '@/lib/prisma';
-import redis from '@/lib/redis';
 
 export type ConfirmPasswordResetState = {
   errors?: {
@@ -66,17 +65,7 @@ export async function confirmPasswordReset(
     };
   }
 
-  const { token } = validatedFields.data;
-
   try {
-    const userId = await redis.get(token);
-
-    if (!userId) {
-      return {
-        success: false,
-        message: t('messages.invalidToken'),
-      };
-    }
 
     // await prisma.user.update({
     //   where: {
@@ -86,8 +75,6 @@ export async function confirmPasswordReset(
     //     password: await argon2.hash(password),
     //   },
     // });
-
-    await redis.del(token);
 
     return {
       success: true,

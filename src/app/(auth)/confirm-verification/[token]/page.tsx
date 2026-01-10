@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { translation } from '@/app/i18n';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-// import prisma from '@/lib/prisma';
-import redis from '@/lib/redis';
 
 export type PageProps = Readonly<{
   params: Promise<{
@@ -16,16 +14,10 @@ export type PageProps = Readonly<{
 export default async function Page(props: PageProps) {
   const { t } = await translation('es', 'confirm-verification');
   const { token } = await props.params;
-
+  if(token) console.log('')
   let result: 'success' | 'failure' = 'failure';
 
   try {
-    const userId = await redis.get(token);
-
-    if (!userId) {
-      throw new Error('Invalid token');
-    }
-
     // await prisma.user.update({
     //   where: {
     //     id: parseInt(userId),
