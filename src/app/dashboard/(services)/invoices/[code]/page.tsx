@@ -16,12 +16,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-type PageProps = {
-  params: {
-    code: string;
-  };
-};
-
 // import OpenFile from '../ui/open-file';
 
 // function format(date: string | undefined, timeZone: string) {
@@ -39,8 +33,12 @@ function money(value?: unknown, currency?: string) {
   return `${currency ? currency + ' ' : ''}${n.toFixed(2)}`;
 }
 
-export default async function Page({ params }: PageProps) {
-  const { code } = params;
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}) {
+  const { code } = await params;
   const { t } = await translation('es', 'verifications');
 
   const session = await getSession();
