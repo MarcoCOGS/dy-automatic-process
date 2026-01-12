@@ -10,12 +10,12 @@ import {
   GenerateSignedGetUrlResponse,
   GenerateSignedPutUrlRequest,
   GenerateSignedPutUrlResponse,
+  Invoice as InvoiceType,
   PostSendFilesToN8nRequest,
-  Verification,
 } from './definitions';
 import { ServerConfig } from './server-config';
 import { getSession } from '@/lib/session';
-import { PrismaClient } from '@prisma/client';
+import { Invoice, PrismaClient, InvoiceItem } from '@prisma/client';
 
 const apiVerifications = axios.create({
   baseURL: ServerConfig.apiVerificationsBaseUrl,
@@ -29,11 +29,28 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 const prisma = globalForPrisma.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-export const findManyVerifications = async (): Promise<Verification[]> => {
+export const findManyInvoices = async (): Promise<InvoiceType[]> => {
   try {
-    const data = await prisma.classificationItem.findMany();
+    const data = await prisma.invoice.findMany();
 
-    return data;
+    return data as unknown as InvoiceType[];
+  } catch (error) {
+    const message = _.get(error, 'response.data.message', (error as Error).message);
+
+    throw new Error(message);
+  }
+};
+
+export const findInvoiceDetail = async ({ code }: {code: string}): Promise< Invoice & {items: InvoiceItem[]} | null> => {
+  try {
+    const invoice = await prisma.invoice.findUnique({
+    where: { id: code },
+    include: {
+      items: true,
+    },
+  });
+
+    return invoice
   } catch (error) {
     const message = _.get(error, 'response.data.message', (error as Error).message);
 
@@ -74,7 +91,7 @@ export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Pr
   {
     headers: {
       'Content-Type': 'multipart/form-data',
-      'batch-id': request.batchId
+      'batch-id': request.invoiceId
     },
   }
     );
@@ -84,10 +101,10 @@ export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Pr
   }
 };
 
-export const getCheckBatchStatusById = async (request: { batchId: string }): Promise<GenerateSignedGetUrlResponse> => {
+export const getCheckBatchStatusById = async (request: { invoiceId: string }): Promise<GenerateSignedGetUrlResponse> => {
   try {
     const response = await apiVerifications.post('/v1/secure/verifications/check-batch-status-by-id', {
-      batchId: request.batchId,
+      invoiceId: request.invoiceId,
     });
 
     return response.data;

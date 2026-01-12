@@ -1,6 +1,7 @@
 // app/api/productos/route.ts
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,156 +11,196 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 const prisma = globalForPrisma.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-type ConfianzaClasificacion = 'alta' | 'media' | 'baja';
-type EstadoProducto = 'nuevo' | 'usado' | 'reacondicionado';
+const nonEmptyTrimmed = z
+  .string()
+  .transform((s) => s.trim())
+  .refine((s) => s.length >= 0, 'Required');
 
-type Producto = {
-  item: number;
-  marca: string;
-  modelo: string;
-  nombre_comercial: string;
-  descripcion_minima: string;
-  material: string;
-  uso_funcion: string;
-  cantidad: number;
-  tipo_unidad: string;
-  pais_origen: string;
-  pais_adquisicion: string;
-  estado: EstadoProducto | string;
-  precio_unitario: number;
-  precio_total: number;
-  partida_arancelaria: string;
-  descripcion_partida: string;
-  capitulo: string;
-  subcapitulo: string;
-  confianza_clasificacion: ConfianzaClasificacion | string;
-  razonamiento_clasificacion: string;
-};
+const zNumberLike = z.union([z.number(), z.string()]).transform((v) => {
+  const n = typeof v === 'number' ? v : Number(v);
+  if (!Number.isFinite(n)) throw new Error('Invalid number');
+  return n;
+});
 
-type Resumen = { total_cantidad: number; total_valor: number };
+const zIntLike = zNumberLike.transform((n) => Math.trunc(n));
 
-type PayloadBody = {
-  productos: Producto[];
-  batchId: string;
-  total_productos: number;
-  resumen: Resumen;
-};
+const EstadoProducto = z.enum(['nuevo', 'usado', 'reacondicionado']);
+const ConfianzaClasificacion = z.enum(['alta', 'media', 'baja']);
 
-function isObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-function isNumber(v: unknown): v is number {
-  return typeof v === 'number' && Number.isFinite(v);
-}
-function isString(v: unknown): v is string {
-  return typeof v === 'string';
-}
+const ItemSchema = z.object({
+  item: zIntLike,
+  marca: nonEmptyTrimmed,
+  modelo: nonEmptyTrimmed,
+  nombre_comercial: nonEmptyTrimmed,
+  descripcion_minima: nonEmptyTrimmed,
+  material: nonEmptyTrimmed,
+  uso_funcion: nonEmptyTrimmed,
+  cantidad: zIntLike,
+  tipo_unidad: nonEmptyTrimmed,
+  pais_origen: nonEmptyTrimmed,
+  pais_adquisicion: nonEmptyTrimmed,
+  estado: z.union([EstadoProducto, nonEmptyTrimmed]),
+  precio_unitario: zNumberLike,
+  precio_total: zNumberLike,
+  partida_arancelaria: nonEmptyTrimmed,
+  descripcion_partida: nonEmptyTrimmed,
+  capitulo: nonEmptyTrimmed,
+  subcapitulo: nonEmptyTrimmed,
+  confianza_clasificacion: z.union([ConfianzaClasificacion, nonEmptyTrimmed]),
+  razonamiento_clasificacion: nonEmptyTrimmed,
+});
 
-function validateProducto(p: unknown): p is Producto {
-  if (!isObject(p)) return false;
+const PayloadSchema = z.object({
+  items: z.array(ItemSchema).min(1),
+  invoiceId: nonEmptyTrimmed,
+  total_productos: zIntLike,
+  resumen: z.object({
+    total_cantidad: zIntLike,
+    total_valor: zNumberLike,
+  }),
 
-  const requiredNumber = ['item', 'cantidad', 'precio_unitario', 'precio_total'] as const;
-  const requiredString = [
-    'marca',
-    'modelo',
-    'nombre_comercial',
-    'descripcion_minima',
-    'material',
-    'uso_funcion',
-    'tipo_unidad',
-    'pais_origen',
-    'pais_adquisicion',
-    'estado',
-    'partida_arancelaria',
-    'descripcion_partida',
-    'capitulo',
-    'subcapitulo',
-    'confianza_clasificacion',
-    'razonamiento_clasificacion',
-  ] as const;
+  invoiceInfo: z.object({
+    numero_factura: nonEmptyTrimmed,
+    incoterms: nonEmptyTrimmed,
+    pais_adquisicion: nonEmptyTrimmed,
+    moneda: nonEmptyTrimmed,
+    lugar_entrega: z.string().optional().default('').transform((s) => s.trim()),
+  }),
 
-  for (const k of requiredNumber) if (!isNumber(p[k])) return false;
-  for (const k of requiredString) if (!isString(p[k])) return false;
+  supplierInfo: z.object({
+    vinculacion: nonEmptyTrimmed,
+    razon_social: z.string().optional().default('').transform((s) => s.trim()),
+    domicilio: z.string().optional().default('').transform((s) => s.trim()),
+    ciudad_pais: z.string().optional().default('').transform((s) => s.trim()),
+    contacto: z.string().optional().default('').transform((s) => s.trim()),
+    telefono: z.string().optional().default('').transform((s) => s.trim()),
+    condicion: nonEmptyTrimmed,
+  }),
 
-  return true;
-}
+  transactionInfo: z.object({
+    forma_pago: nonEmptyTrimmed,
+    banco: z.string().optional().default('').transform((s) => s.trim()),
+    medio_pago: nonEmptyTrimmed,
+    numero_comprobante: z.string().optional().default('').transform((s) => s.trim()),
+  }),
 
-function validateBody(body: unknown): body is PayloadBody {
-  if (!isObject(body)) return false;
+  legalRepresentativeInfo: z.object({
+    nombre: nonEmptyTrimmed,
+    cargo: nonEmptyTrimmed,
+    dni: nonEmptyTrimmed,
+  }),
+});
 
-  if (!Array.isArray(body.productos) || !body.productos.every(validateProducto)) return false;
-  if (!isNumber(body.total_productos)) return false;
-
-  if (!isObject(body.resumen)) return false;
-  if (!isNumber(body.resumen.total_cantidad) || !isNumber(body.resumen.total_valor)) return false;
-
-  return true;
-}
+type PayloadBody = z.infer<typeof PayloadSchema>;
 
 export async function POST(req: Request) {
-  let body: unknown;
+  let raw: unknown;
 
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return NextResponse.json({ ok: false, error: 'Body inválido: se esperaba JSON.' }, { status: 400 });
   }
 
-  if (!validateBody(body)) {
+  const parsed = PayloadSchema.safeParse(raw);
+  if (!parsed.success) {
     return NextResponse.json(
       {
         ok: false,
-        error: 'Payload inválido: se esperaba { productos: Producto[], total_productos: number, resumen: {...} }.',
+        error: 'Payload inválido.',
+        issues: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
       },
       { status: 422 },
     );
   }
 
+  const body: PayloadBody = parsed.data;
+
   // ✅ por ahora hardcode
   const organizationId = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
 
-  // Aplanar productos -> rows
-  const rows = body.productos.map((p) => ({
-    itemNumber: p.item,
+  const invoiceInfo = {
+    invoiceNumber: body.invoiceInfo.numero_factura,
+    incoterms: body.invoiceInfo.incoterms,
+    acquisitionCountry: body.invoiceInfo.pais_adquisicion,
+    currency: body.invoiceInfo.moneda,
+    deliveryPlace: body.invoiceInfo.lugar_entrega || undefined,
+  };
+
+  const supplierInfo = {
+    affiliation: body.supplierInfo.vinculacion,
+    legalName: body.supplierInfo.razon_social || undefined,
+    address: body.supplierInfo.domicilio || undefined,
+    cityCountry: body.supplierInfo.ciudad_pais || undefined,
+    contactName: body.supplierInfo.contacto || undefined,
+    phoneNumber: body.supplierInfo.telefono || undefined,
+    condition: body.supplierInfo.condicion,
+  };
+
+  const transactionInfo = {
+    paymentMethod: body.transactionInfo.forma_pago,
+    bank: body.transactionInfo.banco || undefined,
+    paymentChannel: body.transactionInfo.medio_pago,
+    receiptNumber: body.transactionInfo.numero_comprobante || undefined,
+  };
+
+  const legalRepresentativeInfo = {
+    fullName: body.legalRepresentativeInfo.nombre,
+    position: body.legalRepresentativeInfo.cargo,
+    nationalId: body.legalRepresentativeInfo.dni,
+  };
+
+  const rows = body.items.map((p) => ({
+    invoiceId: body.invoiceId,
+    itemCode: String(p.item),
     brand: p.marca,
     model: p.modelo,
     commercialName: p.nombre_comercial,
     description: p.descripcion_minima,
     material: p.material,
     mainUse: p.uso_funcion,
-    commercialQuantity: p.cantidad,
+    quantity: p.cantidad,
     unitType: p.tipo_unidad,
     countryOfOrigin: p.pais_origen,
     countryOfAcquisition: p.pais_adquisicion,
-    condition: p.estado,
+    condition: String(p.estado).trim(),
     unitPrice: p.precio_unitario,
     totalPrice: p.precio_total,
     referenceCountry: p.pais_adquisicion,
     suggestedHsCode: p.partida_arancelaria,
-    batchId: body.batchId,
   }));
 
   try {
     const insertedCount = await prisma.$transaction(async (tx) => {
-      // 1) crear batch (ajusta campos si tu schema exige más)
-      await tx.classificationBatch.create({
-        data: {
-          id: body.batchId,
-          groupId: '',
+      await tx.invoice.upsert({
+        where: { id: body.invoiceId },
+        create: {
+          id: body.invoiceId,
           state: 'PENDING',
+          invoiceCode: body.invoiceId,
           page: 0,
           totalPage: 0,
+          invoiceInfo,
+          supplierInfo,
+          transactionInfo,
+          legalRepresentativeInfo,
           organization: { connect: { id: organizationId } },
+        },
+        update: {
+          state: 'PENDING',
+          invoiceInfo,
+          supplierInfo,
+          transactionInfo,
+          legalRepresentativeInfo,
         },
       });
 
-      // 2) insertar items
-      const created = await tx.classificationItem.createMany({
+      const created = await tx.invoiceItem.createMany({
         data: rows,
       });
 
-      await tx.classificationBatch.update({
-        where: { id: body.batchId },
+      await tx.invoice.update({
+        where: { id: body.invoiceId },
         data: { state: 'DONE' },
       });
 
@@ -168,19 +209,21 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      batchId: body.batchId,
+      invoiceId: body.invoiceId,
       insertedCount,
-      // opcional: info del payload
       received: {
         total_productos: body.total_productos,
         resumen: body.resumen,
       },
     });
   } catch (err) {
-      await prisma.classificationBatch.update({
-        where: { id: body.batchId },
+    await prisma.invoice
+      .update({
+        where: { id: body.invoiceId },
         data: { state: 'ERROR' },
-      }).catch(() => {});
+      })
+      .catch(() => {});
+
     return NextResponse.json(
       {
         ok: false,

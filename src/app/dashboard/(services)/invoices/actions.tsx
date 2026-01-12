@@ -12,7 +12,7 @@ import * as api from './lib/api';
 type ValidationError = {
   index: number;
   errors: string[];
-  batchId: string;
+  invoiceId: string;
 };
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
@@ -38,7 +38,7 @@ function formatErrorMessages(errors: ValidationError[]): string {
     .join('\n\n');
 }
 
-export const requestVerifications = async(formData: FormData): Promise<{ success: boolean; message: string, batchId?: string }> =>{
+export const requestVerifications = async(formData: FormData): Promise<{ success: boolean; message: string, invoiceId?: string }> =>{
   console.log('aca requestVerifications server')
   const session = await getSession();
 
@@ -67,11 +67,11 @@ export const requestVerifications = async(formData: FormData): Promise<{ success
   //     'Content-Type': signedPutUrl.contentType,
   //   },
   // });
-  const batchId = uuidv4();
+  const invoiceId = uuidv4();
 
   const response = await tryCatch(
     api.postSendFilesToN8n({
-      batchId,
+      invoiceId,
       files: {
         invoiceFile: invoice,
         // productPhotosFile: productPhotos,
@@ -99,15 +99,15 @@ export const requestVerifications = async(formData: FormData): Promise<{ success
 
   return {
     success: true,
-    batchId,
+    invoiceId,
     message: 'Verifications created successfully.',
   };
 }
 
 export const checkBatchStatusAction = async(
-  batchId: string
-): Promise<{ success: boolean; message: string; batchId?: string }> => {
-  console.log('aca checkBatchStatusAction server')
+  invoiceId: string
+): Promise<{ success: boolean; message: string; invoiceId?: string }> => {
+  // console.log('aca checkBatchStatusAction server')
   const session = await getSession();
 
   if (!session) {
@@ -117,8 +117,8 @@ export const checkBatchStatusAction = async(
     };
   }
 
-  const batch = await prisma.classificationBatch.findUnique({
-    where: { id: batchId },
+  const batch = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
     select: { state: true, id: true },
   });
 
@@ -129,14 +129,14 @@ export const checkBatchStatusAction = async(
   if (batch.state !== 'DONE') {
     return {
       success: false,
-      batchId: batch.id,
+      invoiceId: batch.id,
       message: `Batch still processing (${batch.state}).`,
     };
   }
 
   return {
     success: true,
-    batchId: batch.id,
+    invoiceId: batch.id,
     message: 'Batch is DONE.',
   };
 }

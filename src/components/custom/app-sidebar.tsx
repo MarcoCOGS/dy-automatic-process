@@ -29,8 +29,8 @@ export function AppSidebar({
 
   const services = [
     {
-      name: 'Procesar Partidas',
-      url: '/dashboard/verifications',
+      name: 'Procesar Facturas',
+      url: '/dashboard/invoices',
       icon: FileCheck2,
     },
     {
@@ -39,7 +39,7 @@ export function AppSidebar({
       icon: Link,
     },
     {
-      name: 'Demo',
+      name: 'Laboratorio',
       url: '/dashboard/demo',
       icon: FlaskConical,
     },

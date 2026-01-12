@@ -48,32 +48,20 @@
     "verification_document": "Documento de verificación"
   },
   "verificationList": {
-    "title": "Lista de clasificaciones",
-    "description": "Lista de clasificaciones de la organización",
+    "title": "Facturas Comerciales",
+    "description": "Carga masiva para generacion de facturas comerciales",
     "table": {
       "header": {
-        "itemNumber": "Ítem",
-        "brand": "Marca",
-        "model": "Modelo",
-        "commercialName": "Nombre comercial / Producto",
-        "description": "Descripción mínima",
-        "material": "Material",
-        "mainUse": "Uso o función principal",
-        "commercialQuantity": "Cantidad comercial",
-        "unitType": "Tipo de unidad",
-        "countryOfOrigin": "País de origen",
-        "countryOfAcquisition": "País de adquisición",
-        "condition": "Estado",
-        "unitPrice": "Precio unitario",
-        "totalPrice": "Precio total",
-        "referenceCountry": "País de referencia",
-        "suggestedHsCode": "Partida sugerida"
+        "invoiceCode": "Codigo de Factura",
+        "fullName": "Nombre",
+        "createdAt": "Fecha de creación",
+        "detail": "Detalle de Factura"
       }
     }
   },
-  "verificationDetail": {
-    "title": "Detalle de verificación",
-    "description": "Detalle de verificación de la organización",
+  "invoicesDetail": {
+    "title": "Detalle de Facturación",
+    "description": "Detalle de facturación de la organización",
     "fields": {
       "itemNumber": "Ítem",
       "brand": "Marca",

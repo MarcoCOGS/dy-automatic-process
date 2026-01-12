@@ -3,19 +3,6 @@ generator client {
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
-// datasource db {
-//   provider          = "mysql"
-//   url               = env("DATABASE_URL")
-//   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
-// }
-// generator client {
-//   provider = "prisma-client-js"
-// }
-
-// generator client {
-//   provider = "prisma-client-js"
-// }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -36,55 +23,66 @@ model User {
 }
 
 model Organization {
-  id                    String                @id @default(uuid())
-  name                  String
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  users                 User[]
-  classificationBatches ClassificationBatch[]
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  users     User[]
+  invoices  Invoice[]
 
   @@map("organizations")
 }
 
-model ClassificationBatch {
-  id             String               @id @default(uuid())
-  groupId        String
-  state          String
-  comment        String?
-  page           Int
-  totalPage      Int
-  organizationId String
-  organization   Organization         @relation(fields: [organizationId], references: [id])
-  items          ClassificationItem[]
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+model Invoice {
+  id                      String        @id @default(uuid())
+  groupId                 String?
+  state                   String
+  comment                 String?
+  page                    Int?
+  totalPage               Int?
+  invoiceCode             String        @unique
+  invoiceInfo             Json?
+  supplierInfo            Json?
+  transactionInfo         Json?
+  legalRepresentativeInfo Json?
+  organizationId          String
+  organization            Organization  @relation(fields: [organizationId], references: [id])
+  items                   InvoiceItem[]
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 
+  @@index([organizationId])
   @@index([groupId])
-  @@map("classification_batches")
+  @@index([state])
+  @@map("invoices")
 }
 
-model ClassificationItem {
-  id                   String              @id @default(uuid())
-  itemNumber           Int?
+model InvoiceItem {
+  id                   String   @id @default(uuid())
+  invoiceId            String
+  invoice              Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  itemCode             String?
+  description          String?
+  quantity             Int?
+  unitType             String?
+  unitPrice            Decimal? @db.Decimal(18, 2)
+  totalPrice           Decimal? @db.Decimal(18, 2)
+  taxRate              Decimal? @db.Decimal(5, 4)
+  taxAmount            Decimal? @db.Decimal(18, 2)
+  discountAmount       Decimal? @db.Decimal(18, 2)
   brand                String?
   model                String?
   commercialName       String?
-  description          String?
   material             String?
   mainUse              String?
-  commercialQuantity   Int?
-  unitType             String?
   countryOfOrigin      String?
   countryOfAcquisition String?
   condition            String?
-  unitPrice            Float?
-  totalPrice           Float?
   referenceCountry     String?
   suggestedHsCode      String?
-  batchId              String
-  batch                ClassificationBatch @relation(fields: [batchId], references: [id])
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  @@map("classification_items")
+  @@index([invoiceId])
+  @@map("invoice_items")
 }

@@ -121,7 +121,7 @@ export default function RequestVerifications() {
   // const [hasEverSucceeded, setHasEverSucceeded] = useState(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false)
-  const [batchId, setBatchId] = useState<undefined | string | null>(null)
+  const [invoiceId, setinvoiceId] = useState<undefined | string | null>(null)
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
@@ -177,7 +177,7 @@ export default function RequestVerifications() {
           // setHasEverSucceeded(true);
           setIsLoading(true)
           setOpen(false)
-          setBatchId(response.data.batchId)
+          setinvoiceId(response.data.invoiceId)
         } else {
           setMessage(response.data.message);
         }
@@ -203,7 +203,7 @@ export default function RequestVerifications() {
   // }
 
 useEffect(() => {
-  if (!batchId) return;
+  if (!invoiceId) return;
 
   let cancelled = false;
   let timeoutId: NodeJS.Timeout;
@@ -211,11 +211,11 @@ useEffect(() => {
   const poll = async () => {
     try {
       console.log('aca checkBatchStatusAction client')
-      const response = await tryCatch(checkBatchStatusAction(batchId));
+      const response = await tryCatch(checkBatchStatusAction(invoiceId));
 
       if (response?.data?.success) {
         if (!cancelled) {
-          setBatchId(null);
+          setinvoiceId(null);
           setIsLoading(false)
           router.refresh();
         }
@@ -240,7 +240,7 @@ useEffect(() => {
     cancelled = true;
     if (timeoutId) clearTimeout(timeoutId);
   };
-}, [batchId]);
+}, [invoiceId]);
 
   return (
     <>
@@ -248,14 +248,14 @@ useEffect(() => {
         <DialogTrigger asChild>
           <Button variant='outline' type='submit' onClick={() => setOpen(true)}>
             <FilePlus2Icon />
-            Solicitar Verificaciones
+            Carga de documentos
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sistema de Clasificación Arancelaria</DialogTitle>
+            <DialogTitle>Carga de documentos para generacion de Factura</DialogTitle>
             <DialogDescription>
-              Sube tus documentos para clasificación automática con IA
+              Sube tus documentos para clasificación Arancelaria automática con IA y genera una Factura
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -330,7 +330,7 @@ useEffect(() => {
               <DialogFooter>
                 <Button disabled={isPending} type='submit'>
                   {isPending && <Loader2 className='h-5 w-5 animate-spin' />}
-                  Procesar archivo
+                  Procesar archivos
                 </Button>
               </DialogFooter>
             </form>

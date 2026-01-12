@@ -39,9 +39,9 @@ export default async function Layout({ children }: LayoutProps) {
 
   return (
     <SessionProvider>
-      <SidebarProvider>
+      <SidebarProvider className='max-w-screen'>
         <AppSidebar organizations={organizations} activeOrganizationId={session.organization.id} />
-        <SidebarInset>
+        <SidebarInset className='max-w-screen'>
           <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
             <div className='flex items-center gap-2 px-4'>
               <SidebarTrigger className='-ml-1' />
@@ -70,7 +70,7 @@ export default async function Layout({ children }: LayoutProps) {
               <Suspense>{children}</Suspense>
             </div>
           </div>
-        </SidebarInset>
+          </SidebarInset>
       </SidebarProvider>
     </SessionProvider>
   );

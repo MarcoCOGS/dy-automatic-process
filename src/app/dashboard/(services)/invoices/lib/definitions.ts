@@ -13,7 +13,7 @@ export interface CreateManyVerificationsRequest {
 }
 
 export interface PostSendFilesToN8nRequest {
-  readonly batchId: string;
+  readonly invoiceId: string;
   readonly files: {
     readonly invoiceFile: File;
     readonly productPhotosFile?: File[];
@@ -63,24 +63,51 @@ export interface KeynuaIdentityVerification extends IdentityVerification {
   readonly token: string;
 }
 
-export interface Verification {
-  readonly itemNumber: number | null;
-  readonly brand: string | null;
-  readonly model: string | null;
-  readonly commercialName: string | null;
-  readonly description: string | null;
-  readonly material: string | null;
-  readonly mainUse: string | null;
-  readonly commercialQuantity: number | null;
-  readonly unitType: string | null;
-  readonly countryOfOrigin: string | null;
-  readonly countryOfAcquisition: string | null;
-  readonly condition: string | null;
-  readonly unitPrice: number | null;
-  readonly totalPrice: number | null;
-  readonly referenceCountry: string | null;
-  readonly suggestedHsCode: string | null;
+export interface Invoice {
+  readonly id: string;
+  readonly invoiceCode: string;
+  readonly state: string;
+  readonly comment?: string;
+  readonly page?: number;
+  readonly totalPage?: number;
+
+  readonly invoiceInfo?: {
+    readonly invoiceNumber?: string;
+    readonly incoterms?: string;
+    readonly acquisitionCountry?: string;
+    readonly currency?: string;
+    readonly deliveryPlace?: string;
+  };
+
+  readonly supplierInfo?: {
+    readonly affiliation?: string;
+    readonly legalName?: string;
+    readonly address?: string;
+    readonly cityCountry?: string;
+    readonly contactName?: string;
+    readonly phoneNumber?: string;
+    readonly condition?: string;
+  };
+
+  readonly transactionInfo?: {
+    readonly paymentMethod?: string;
+    readonly bank?: string;
+    readonly paymentChannel?: string;
+    readonly receiptNumber?: string;
+  };
+
+  readonly legalRepresentativeInfo?: {
+    readonly fullName?: string;
+    readonly position?: string;
+    readonly nationalId?: string;
+    readonly signatureUrl?: string;
+  };
+
+  readonly organizationId: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
 }
+
 
 export enum DocumentType {
   DNI = 'DNI',

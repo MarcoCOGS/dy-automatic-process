@@ -1,7 +1,7 @@
 export default function Page() {
   return (
     <div>
-      <p>Demo</p>
+      <p>Próxima funcionalidad</p>
     </div>
   );
 }
