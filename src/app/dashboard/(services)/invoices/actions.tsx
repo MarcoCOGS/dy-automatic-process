@@ -145,7 +145,6 @@ export const checkInvoiceStatusAction = async(
 
   return {
     success: true,
-    invoiceId: invoice.id,
-    message: 'Batch is DONE.',
+    message: 'Factura procesada correctamente',
   };
 }
