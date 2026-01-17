@@ -25,88 +25,88 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { tryCatch } from '@/lib/try-catch';
-import { checkBatchStatusAction, requestVerifications } from '../actions';
+import { checkInvoiceStatusAction, requestVerifications } from '../actions';
 
 
 const fileSizeLimit = 1024 * 1024 * 10;
 
 const xlsxFileType = mime.lookup('xlsx') as string;
 const pdfFileType = mime.lookup('pdf') as string;
-// const imageTypes = [
-//   mime.lookup('jpg') as string,
-//   mime.lookup('jpeg') as string,
-//   mime.lookup('png') as string,
-//   mime.lookup('webp') as string,
-// ];
+const imageTypes = [
+  mime.lookup('jpg') as string,
+  mime.lookup('jpeg') as string,
+  mime.lookup('png') as string,
+  mime.lookup('webp') as string,
+  mime.lookup('svg') as string,
+];
 
 const formSchema = z
   .object({
-    // Factura (obligatoria)
+    invoiceNumber: z
+      .string({
+        required_error: 'Debes ingresar el número de factura.',
+      })
+      .min(1, 'Debes ingresar el número de factura.'),
     invoice:
       typeof window === 'undefined'
         ? z.any()
         : z
-            .instanceof(FileList)
-            .refine((file) => file.length === 1, 'Debes subir la factura.')
+            .preprocess(
+              (v) => (v instanceof FileList ? v : undefined),
+              z.instanceof(FileList).optional(),
+            )
+            .refine((files) => !!files && files.length === 1, 'Debes subir la factura.')
             .refine(
-              (file) => {
-                if (!file.length) return true;
-                const type = mime.lookup(file[0].name);
+              (files) => {
+                if (!files?.length) return true;
+                const type = mime.lookup(files[0].name);
                 return type === pdfFileType || type === xlsxFileType;
               },
               'La factura debe ser PDF o Excel (.xlsx).',
             )
             .refine(
-              (file) => !file.length || file[0].size <= fileSizeLimit,
+              (files) => {
+                if (!files?.length) return true;
+                return files[0].size <= fileSizeLimit;
+              },
               'La factura es demasiado grande. Máximo 10MB.',
             ),
-
-    // Fotos de productos (al menos 1 imagen)
-    // productPhotos:
-    //   typeof window === 'undefined'
-    //     ? z.any()
-    //     : z
-    //         .instanceof(FileList)
-    //         .refine((files) => files.length >= 1, 'Debes subir al menos una foto de producto.')
-    //         .refine(
-    //           (files) =>
-    //             !files.length ||
-    //             Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
-    //           'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
-    //         )
-    //         .refine(
-    //           (files) =>
-    //             !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
-    //           'Alguna foto supera el tamaño máximo de 10MB.',
-    //         ),
-    // productPhotos1:
-    //   typeof window === 'undefined'
-    //     ? z.any()
-    //     : z
-    //         .instanceof(FileList)
-    //         .refine((files) => files.length >= 1, 'Debes subir al menos una foto de producto.')
-    //         .refine(
-    //           (files) =>
-    //             !files.length ||
-    //             Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
-    //           'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
-    //         )
-    //         .refine(
-    //           (files) =>
-    //             !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
-    //           'Alguna foto supera el tamaño máximo de 10MB.',
-    //         ),
-
-    // Info adicional (opcional)
-    // extraInfo:
-    //   typeof window === 'undefined'
-    //     ? z.any()
-    //     : z
-    //         .instanceof(FileList)
-    //         .refine(
-    //           (files) => !files.length || files[0].size <= fileSizeLimit,
-    //           'El archivo adicional es demasiado grande. Máximo 10MB.',
-    //         ),
+    productPhotos:
+      typeof window === 'undefined'
+        ? z.any()
+        : z
+            .preprocess(
+              (v) => (v instanceof FileList ? v : undefined),
+              z
+                .instanceof(FileList)
+                .refine((files) => files.length <= 3, 'Puedes subir como máximo 3 archivos.')
+                .refine(
+                  (files) =>
+                    !files.length ||
+                    Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
+                  'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
+                )
+                .refine(
+                  (files) => !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
+                  'Alguna foto supera el tamaño máximo de 10MB.',
+                )
+                .optional(),
+            ),
+    extraInfo:
+      typeof window === 'undefined'
+        ? z.any()
+        : z
+            .preprocess(
+              (v) => (v instanceof FileList ? v : undefined),
+              z
+                .instanceof(FileList)
+                .refine((files) => files.length <= 3, 'Puedes subir como máximo 3 archivos.')
+                .refine(
+                  (files) => !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
+                  'Algún archivo adicional supera el tamaño máximo de 10MB.',
+                )
+                .optional(),
+            ),
   });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -129,42 +129,35 @@ export default function RequestVerifications() {
   });
 
   function onSubmit(data: FormValues) {
-    if (submittingRef.current) return;
-  submittingRef.current = true;
+    // if (submittingRef.current) return;
+    submittingRef.current = true;
     startTransition(async () => {
       const formData = new FormData();
+      const invoiceNumber = data.invoiceNumber
+      if(invoiceNumber) formData.append('invoiceNumber', invoiceNumber);
 
       const invoiceFile = data.invoice?.[0];
       if (invoiceFile) {
         formData.append('invoice', invoiceFile);
       }
 
-      // const photoFiles = data.productPhotos;
-      // if (photoFiles?.length) {
-      //   Array.from(photoFiles).forEach((file, index) => {
-      //     formData.append(`productPhotos[${index}]`, file as Blob);
-      //   });
-      // }
+      const photoFiles = data.productPhotos;
+      if (photoFiles?.length) {
+        Array.from(photoFiles).forEach((file) => {
+          formData.append('productPhotos', file as Blob);
+        });
+      }
 
-      // const photoFiles = data.productPhotos?.[0];
-      // if (photoFiles) {
-      //   formData.append('productPhotos', photoFiles);
-      // }
-
-      // const photoFiles1 = data.productPhotos1?.[0];
-      // if (photoFiles1) {
-      //   formData.append('productPhotos1', photoFiles1);
-      // }
-
-      // const extraFile = data.extraInfo?.[0];
-      // if (extraFile) {
-      //   formData.append('extraInfo', extraFile);
-      // }
-      console.log('aca requestVerifications client')
+      const extraFiles = data.extraInfo;
+      if (extraFiles?.length) {
+        Array.from(extraFiles).forEach((file) => {
+          formData.append('extraInfo', file as Blob);
+        });
+      }
       const response = await tryCatch(requestVerifications(formData));
 
       if (response.error) {
-        toast('Uh oh! Something went wrong.', {
+        toast('Error interno, contacte al administrador', {
           description: response.error.message,
         });
       } else {
@@ -172,35 +165,37 @@ export default function RequestVerifications() {
           toast('Notice', {
             description: response.data.message,
           });
-
           setMessage('');
           // setHasEverSucceeded(true);
           setIsLoading(true)
           setOpen(false)
           setinvoiceId(response.data.invoiceId)
+          form.reset();
+          submittingRef.current = false;
         } else {
           setMessage(response.data.message);
+          setIsLoading(false)
         }
-
-        // form.reset();
       }
+
     });
   }
 
-  // function onOpenChange(open: boolean) {
-  //   if (open) {
-  //     setMessage('');
-  //   } else {
-  //     form.reset();
+  function onOpenChange(open: boolean) {
+    if (open) {
+      setMessage('');
+    } else {
+      form.reset();
+      setOpen(false)
 
-  //     // if (hasEverSucceeded) {
-  //     //   startTransition2(() => {
-  //     //     setMessage('');
-  //     //     router.refresh();
-  //     //   });
-  //     // }
-  //   }
-  // }
+      // if (hasEverSucceeded) {
+      //   startTransition2(() => {
+      //     setMessage('');
+      //     router.refresh();
+      //   });
+      // }
+    }
+  }
 
 useEffect(() => {
   if (!invoiceId) return;
@@ -210,8 +205,18 @@ useEffect(() => {
 
   const poll = async () => {
     try {
-      console.log('aca checkBatchStatusAction client')
-      const response = await tryCatch(checkBatchStatusAction(invoiceId));
+      const response = await tryCatch(checkInvoiceStatusAction(invoiceId));
+
+      if (response?.data?.invoiceId) {
+        if (!cancelled) {
+          setinvoiceId(null);
+          setIsLoading(false)
+          toast('Error interno, contacte al administrador', {
+            description: response.data.message,
+          });
+        }
+        return;
+      }
 
       if (response?.data?.success) {
         if (!cancelled) {
@@ -223,13 +228,13 @@ useEffect(() => {
       }
 
       if (!cancelled) {
-        timeoutId = setTimeout(poll, 2000);
+        timeoutId = setTimeout(poll, 5000);
       }
     } catch (error) {
       console.error(error);
 
       if (!cancelled) {
-        timeoutId = setTimeout(poll, 2000);
+        timeoutId = setTimeout(poll, 5000);
       }
     }
   };
@@ -244,7 +249,7 @@ useEffect(() => {
 
   return (
     <>
-      <Dialog onOpenChange={setOpen} open={open}>
+      <Dialog onOpenChange={onOpenChange} open={open}>
         <DialogTrigger asChild>
           <Button variant='outline' type='submit' onClick={() => setOpen(true)}>
             <FilePlus2Icon />
@@ -259,8 +264,29 @@ useEffect(() => {
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-              {/* Factura */}
+            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8' autoComplete='false'>
+              <FormField
+                control={form.control}
+                name='invoiceNumber'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número de factura</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='text'
+                        placeholder='Ingresa Número de factura'
+                        disabled={isPending}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name='invoice'
@@ -282,9 +308,7 @@ useEffect(() => {
                   </FormItem>
                 )}
               />
-
-              {/* Fotos de productos */}
-              {/* <FormField
+              <FormField
                 control={form.control}
                 name='productPhotos'
                 render={({ field }) => (
@@ -304,10 +328,9 @@ useEffect(() => {
                     <FormMessage />
                   </FormItem>
                 )}
-              /> */}
+              />
 
-              {/* Información adicional */}
-              {/* <FormField
+              <FormField
                 control={form.control}
                 name='extraInfo'
                 render={({ field }) => (
@@ -318,6 +341,7 @@ useEffect(() => {
                         type='file'
                         disabled={isPending}
                         onChange={(e) => field.onChange(e.target.files)}
+                        multiple
                         ref={field.ref}
                       />
                     </FormControl>
@@ -325,7 +349,7 @@ useEffect(() => {
                     <FormMessage />
                   </FormItem>
                 )}
-              /> */}
+              />
 
               <DialogFooter>
                 <Button disabled={isPending} type='submit'>
@@ -346,11 +370,6 @@ useEffect(() => {
           )}
         </DialogContent>
       </Dialog>
-      {/* <Backdrop open={isPending2} variant='blur'>
-        <div className='animate-pulse'>
-          <Loader2 className='h-12 w-12 animate-spin text-primary' />
-        </div>
-      </Backdrop> */}
       <Backdrop open={isLoading} variant='blur'>
         <div className='animate-pulse'>
           <Loader2 className='h-12 w-12 animate-spin text-primary' />

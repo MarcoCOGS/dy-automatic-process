@@ -53,6 +53,7 @@
     "table": {
       "header": {
         "invoiceCode": "Codigo de Factura",
+        "invoiceId": "ID",
         "fullName": "Nombre",
         "createdAt": "Fecha de creación",
         "detail": "Detalle de Factura"

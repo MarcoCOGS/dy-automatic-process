@@ -1,4 +1,3 @@
-// app/api/productos/route.ts
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
@@ -6,7 +5,6 @@ import { z } from 'zod';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// ✅ singleton Prisma (dev)
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 const prisma = globalForPrisma.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
@@ -53,6 +51,7 @@ const ItemSchema = z.object({
 const PayloadSchema = z.object({
   items: z.array(ItemSchema).min(1),
   invoiceId: nonEmptyTrimmed,
+  invoiceCode: nonEmptyTrimmed,
   total_productos: zIntLike,
   resumen: z.object({
     total_cantidad: zIntLike,
@@ -177,7 +176,7 @@ export async function POST(req: Request) {
         create: {
           id: body.invoiceId,
           state: 'PENDING',
-          invoiceCode: body.invoiceId,
+          invoiceCode: body.invoiceCode,
           page: 0,
           totalPage: 0,
           invoiceInfo,

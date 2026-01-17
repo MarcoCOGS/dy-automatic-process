@@ -26,20 +26,21 @@ export default async function VerificationList({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('verificationList.table.header.invoiceId')}</TableHead>
               <TableHead>{t('verificationList.table.header.invoiceCode')}</TableHead>
-              {/* <TableHead>{t('verificationList.table.header.fullName')}</TableHead> */}
               <TableHead>{t('verificationList.table.header.createdAt')}</TableHead>
               <TableHead>{t('verificationList.table.header.detail')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {invoices.map((invoice) => (
-              <TableRow key={invoice.invoiceCode}>
+              <TableRow key={invoice.id}>
+                <TableCell>{invoice.id}</TableCell>
                 <TableCell>{invoice.invoiceCode}</TableCell>
                 {/* <TableCell>{invoice.legalRepresentativeInfo?.fullName}</TableCell> */}
                 <TableCell>{invoice.createdAt.toString()}</TableCell>
                 <TableCell align='center'>
-                  <ViewVerification code={invoice?.invoiceCode?.toString()} />
+                  <ViewVerification code={invoice?.id?.toString()} />
                 </TableCell>
               </TableRow>
             ))}

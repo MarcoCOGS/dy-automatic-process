@@ -39,7 +39,6 @@ function formatErrorMessages(errors: ValidationError[]): string {
 }
 
 export const requestVerifications = async(formData: FormData): Promise<{ success: boolean; message: string, invoiceId?: string }> =>{
-  console.log('aca requestVerifications server')
   const session = await getSession();
 
   if (!session) {
@@ -51,9 +50,20 @@ export const requestVerifications = async(formData: FormData): Promise<{ success
 
   const invoice = formData.get('invoice') as File | null;
   if (!invoice) return { success: false, message: 'Debes subir la factura.' };
-  // const productPhotos = formData.getAll('productPhotos') as File[];
-  // const extraInfo = (formData.get('extraInfo') as File | null) ?? null
-  // const productPhotos1 = (formData.get('productPhotos1') as File | null) ?? null
+  const productPhotos = formData.getAll('productPhotos') as File[];
+  const extraInfo = formData.getAll('extraInfo') as File[];
+  const invoiceNumber = formData.get('invoiceNumber') as string
+  console.log({invoiceNumber})
+  if (!invoiceNumber) return { success: false, message: 'Debes Ingresar el número de factura.' };
+
+  const invoiceCode = await prisma.invoice.findUnique({
+    where: { invoiceCode: invoiceNumber },
+    select: { state: true, id: true },
+  });
+
+  if (invoiceCode) {
+    return { success: false, message: 'Numero de Factura ya existe' };
+  }
 
   // const signedPutUrl = await api.generateSignedPutUrl({
   //   fileName: file.name,
@@ -72,11 +82,11 @@ export const requestVerifications = async(formData: FormData): Promise<{ success
   const response = await tryCatch(
     api.postSendFilesToN8n({
       invoiceId,
+      invoiceNumber,
       files: {
         invoiceFile: invoice,
-        // productPhotosFile: productPhotos,
-        // extraInfoFile: extraInfo,
-        // productPhotosFile1: productPhotos1
+        ...(productPhotos?{productPhotosFile: productPhotos}:{}),
+        ...(extraInfo?{extraInfoFile: extraInfo}:{}),
       }
     }),
   );
@@ -93,21 +103,20 @@ export const requestVerifications = async(formData: FormData): Promise<{ success
 
     return {
       success: false,
-      message: 'Error creating verifications.',
+      message: 'Error al procesar la Factura.',
     };
   }
 
   return {
     success: true,
     invoiceId,
-    message: 'Verifications created successfully.',
+    message: 'Factura siendo procesada ...',
   };
 }
 
-export const checkBatchStatusAction = async(
+export const checkInvoiceStatusAction = async(
   invoiceId: string
 ): Promise<{ success: boolean; message: string; invoiceId?: string }> => {
-  // console.log('aca checkBatchStatusAction server')
   const session = await getSession();
 
   if (!session) {
@@ -117,26 +126,26 @@ export const checkBatchStatusAction = async(
     };
   }
 
-  const batch = await prisma.invoice.findUnique({
+  const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
-    select: { state: true, id: true },
+    select: { state: true, id: true, invoiceCode: true },
   });
 
-  if (!batch) {
-    return { success: false, message: 'Batch not found.' };
+  if (!invoice) {
+    return { success: false, message: 'Invoice not found.' };
   }
 
-  if (batch.state !== 'DONE') {
+  if (invoice.state !== 'DONE') {
     return {
       success: false,
-      invoiceId: batch.id,
-      message: `Batch still processing (${batch.state}).`,
+      invoiceId: invoice.id,
+      message: `Error al procesar la factura: ${invoice.invoiceCode}.`,
     };
   }
 
   return {
     success: true,
-    invoiceId: batch.id,
+    invoiceId: invoice.id,
     message: 'Batch is DONE.',
   };
 }

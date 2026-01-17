@@ -14,10 +14,11 @@ export interface CreateManyVerificationsRequest {
 
 export interface PostSendFilesToN8nRequest {
   readonly invoiceId: string;
+  readonly invoiceNumber: string;
   readonly files: {
     readonly invoiceFile: File;
     readonly productPhotosFile?: File[];
-    readonly extraInfoFile?: File | null;
+    readonly extraInfoFile?: File[];
   }
 }
 

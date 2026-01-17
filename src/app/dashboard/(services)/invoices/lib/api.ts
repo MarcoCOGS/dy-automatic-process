@@ -71,34 +71,29 @@ export const createManyVerifications = async (request: CreateManyVerificationsRe
 export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Promise<void> => {
   const fd = new FormData();
 
-  // Deben coincidir con los keys del webhook (Postman)
   fd.append('1_invoice', request.files.invoiceFile);
 
-  // if (request.files?.productPhotosFile) {
-  //   fd.append('1_productPhotos', request.files.productPhotosFile[0]); // solo 1
-  // }
+  if (request.files?.productPhotosFile) {
+    request.files?.productPhotosFile.forEach((file, index)=>fd.append(`${index}_productPhotos`, file))
+    // fd.append('1_productPhotos', request.files.productPhotosFile[0]);
+  }
 
-  // if (request.files.extraInfoFile) {
-  //   fd.append('1_extraInfo', request.files.extraInfoFile);
-  // }
+  if (request.files.extraInfoFile) {
+    // fd.append('1_extraInfo', request.files.extraInfoFile[0]);
+    request.files.extraInfoFile.forEach((file, index)=>fd.append(`${index}_extraInfo`, file))
+  }
 
-  // if (request.files.productPhotosFile1) {
-  //   fd.append('1_productPhotos1', request.files.productPhotosFile1); // solo 1
-  // }
-  try {
     const response = await apiVerifications.post(ServerConfig.webhookPath,
   fd,
   {
     headers: {
       'Content-Type': 'multipart/form-data',
-      'batch-id': request.invoiceId
+      'invoice-id': request.invoiceId,
+      'invoice-number': request.invoiceNumber
     },
   }
     );
     return response.data;
-  } catch (error) {
-      console.log(error)
-  }
 };
 
 export const getCheckBatchStatusById = async (request: { invoiceId: string }): Promise<GenerateSignedGetUrlResponse> => {

@@ -63,7 +63,7 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
 
   try {
     // const user = await prisma.user.findUnique({
-    const user: {state: UserStates, lockedAt: Date | null, failedAttempts: number, reason: null } | null = password === 'n8nmoong' && email === 'n8nmoong@hotmail.com'
+    const user: {state: UserStates, lockedAt: Date | null, failedAttempts: number, reason: null } | null = password === 'n8nmoong' && email === 'n8nmoonglobal@gmail.com'
     ? {state: UserStates.ACTIVE, failedAttempts: 0, reason: null, lockedAt: null} : null;
 
     if (!user) {

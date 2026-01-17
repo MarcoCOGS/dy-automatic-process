@@ -15,7 +15,9 @@ type Data = {
 };
 
 export async function registerUser(data: Data) {
-  console.log(data)
+  if (data) {
+    console.log('')
+  }
   // const foundInvitation = await prisma.invitation.findUnique({
   //   where: {
   //     token: data.token,
