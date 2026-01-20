@@ -90,12 +90,12 @@ export default async function Page({
       </div>
 
       {/* Header band */}
-      <div className="rounded-lg border">
-        <div className="bg-emerald-700 text-white px-4 py-2 text-sm font-semibold tracking-wide rounded-t-lg">
+      <div className="w-[100vw - 400px] bg-black">
+        {/* <div className="bg-emerald-700 text-white px-4 py-2 text-sm font-semibold tracking-wide rounded-t-lg">
           {'TRADUCCIÓN DE FACTURA'}
-        </div>
+        </div> */}
 
-        <div className="max-w-[1180px] p-4 space-y-4">
+        <div className=" p-4 space-y-4">
           {/* Top 3 blocks */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {/* Invoice Info */}

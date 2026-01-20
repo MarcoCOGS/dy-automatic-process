@@ -2,8 +2,21 @@ import { translation } from '@/app/i18n';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 // import { ability } from '@/lib/abilities';
 
+import { DateTime } from 'luxon';
+
 import { findManyInvoices } from '../lib/api';
 import { ViewVerification } from './buttons';
+
+const dateFormat = (raw: string): string => {
+  const jsDate = new Date(raw);
+
+  if (isNaN(jsDate.getTime())) return 'Fecha inválida';
+
+  return DateTime
+    .fromJSDate(jsDate)
+    .setZone('America/Lima')
+    .toFormat('dd/LL/yyyy HH:mm');
+};
 
 export default async function VerificationList({
   // userId,
@@ -26,7 +39,7 @@ export default async function VerificationList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('verificationList.table.header.invoiceId')}</TableHead>
+              {/* <TableHead>{t('verificationList.table.header.invoiceId')}</TableHead> */}
               <TableHead>{t('verificationList.table.header.invoiceCode')}</TableHead>
               <TableHead>{t('verificationList.table.header.createdAt')}</TableHead>
               <TableHead>{t('verificationList.table.header.detail')}</TableHead>
@@ -38,7 +51,7 @@ export default async function VerificationList({
                 <TableCell>{invoice.id}</TableCell>
                 <TableCell>{invoice.invoiceCode}</TableCell>
                 {/* <TableCell>{invoice.legalRepresentativeInfo?.fullName}</TableCell> */}
-                <TableCell>{invoice.createdAt.toString()}</TableCell>
+                <TableCell>{dateFormat(invoice.createdAt)}</TableCell>
                 <TableCell align='center'>
                   <ViewVerification code={invoice?.id?.toString()} />
                 </TableCell>
