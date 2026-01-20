@@ -90,7 +90,7 @@ export default async function Page({
       </div>
 
       {/* Header band */}
-      <div className="w-[100vw - 400px] bg-black">
+      <div className="w-[100vw - 400px]">
         {/* <div className="bg-emerald-700 text-white px-4 py-2 text-sm font-semibold tracking-wide rounded-t-lg">
           {'TRADUCCIÓN DE FACTURA'}
         </div> */}
