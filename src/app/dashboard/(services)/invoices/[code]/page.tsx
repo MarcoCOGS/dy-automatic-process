@@ -30,7 +30,7 @@ function money(value?: unknown, currency?: string) {
   if (value === null || value === undefined) return '—';
   const n = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(n)) return '—';
-  return `${currency ? currency + ' ' : ''}${n.toFixed(2)}`;
+  return `$${currency ? currency + ' ' : ''}${n.toFixed(2)}`;
 }
 
 export default async function Page({
@@ -77,7 +77,7 @@ export default async function Page({
   const invoiceDetails = invoiceDetail as unknown as InvoiceType & { items: InvoiceItem[] };
 
   return (
-    <div className="h-full flex-1 flex-col space-y-6 p-6 md:flex">
+    <div className="h-full flex-1 flex-col space-y-6 p-6 md:flex w-fit">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">{t('invoicesDetail.title')}</h2>
@@ -90,12 +90,12 @@ export default async function Page({
       </div>
 
       {/* Header band */}
-      <div className="w-[100vw - 400px]">
+      <div className="">
         {/* <div className="bg-emerald-700 text-white px-4 py-2 text-sm font-semibold tracking-wide rounded-t-lg">
           {'TRADUCCIÓN DE FACTURA'}
         </div> */}
 
-        <div className=" p-4 space-y-4">
+        <div className="p-4 space-y-4">
           {/* Top 3 blocks */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {/* Invoice Info */}
@@ -211,7 +211,7 @@ export default async function Page({
           </div>
 
           {/* Legal Representative block */}
-          <Card className="max-w-[1180px] rounded-xl">
+          <Card className="rounded-xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-emerald-800">
                 {'REPRESENTANTE LEGAL'}
@@ -263,65 +263,51 @@ export default async function Page({
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="max-w-[1200px] overflow-x-auto">
-                <Table className="max-w-[calc(100vw - 260px)]">
-                  <TableHeader>
-                    <TableRow className="bg-emerald-700/10">
-                      <TableHead className="whitespace-nowrap">{'ITEM'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'MARCA'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'NUEVO/USADO'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'MODELO'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'NOMBRE COMERCIAL'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'DESCRIPCIÓN MÍNIMA'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'MATERIAL'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'USO / FUNCIÓN'}</TableHead>
-                      <TableHead className="whitespace-nowrap text-right">{'CANTIDAD'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'UNIDAD'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'PAÍS ORIGEN'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'PAÍS ADQUISICIÓN'}</TableHead>
-                      <TableHead className="whitespace-nowrap text-right">{'UNIT PRICE'}</TableHead>
-                      <TableHead className="whitespace-nowrap text-right">{'TOTAL PRICE'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'PAÍS REF.'}</TableHead>
-                      <TableHead className="whitespace-nowrap">{'PARTIDA SUGERIDA'}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {invoiceDetails.items.map((it) => (
-                      <TableRow key={it.id}>
-                        <TableCell className="whitespace-nowrap">{it.itemCode}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.brand}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.condition}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.model}</TableCell>
-                        <TableCell className="min-w-[220px]">{it.commercialName}</TableCell>
-                        <TableCell className="min-w-[240px]">{it.description}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.material}</TableCell>
-                        <TableCell className="min-w-[220px]">{it.mainUse}</TableCell>
-                        <TableCell className="whitespace-nowrap text-right">{it.quantity}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.unitType}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.countryOfOrigin}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.countryOfAcquisition}</TableCell>
-                        <TableCell className="whitespace-nowrap text-right">{money(it.unitPrice)}</TableCell>
-                        <TableCell className="whitespace-nowrap text-right">{money(it.totalPrice)}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.referenceCountry}</TableCell>
-                        <TableCell className="whitespace-nowrap">{it.suggestedHsCode}</TableCell>
+                <div className="">
+                  <Table className="overflow-x-auto">
+                    <TableHeader>
+                      <TableRow className="bg-emerald-700/10">
+                        <TableHead className="whitespace-nowrap text-center">{'ITEM'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'MARCA'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'NUEVO/USADO'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'MODELO'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'NOMBRE COMERCIAL'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'DESCRIPCIÓN MÍNIMA'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'MATERIAL'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'USO / FUNCIÓN'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'CANTIDAD'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'UNIDAD'}</TableHead>
+                        <TableHead className="whitespace-nowrap">{'PAÍS ORIGEN'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'PAÍS ADQUISICIÓN'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'UNIT PRICE'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'TOTAL PRICE'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'PARTIDA SUGERIDA'}</TableHead>
                       </TableRow>
-                    ))}
+                    </TableHeader>
 
-                    {/* Totals row */}
-                    {/* <TableRow className="bg-muted/30">
-                      <TableCell colSpan={8} className="font-semibold">
-                        {t('invoicesDetail.totals') || 'TOTALES'}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">{v(totalQty)}</TableCell>
-                      <TableCell colSpan={3} />
-                      <TableCell />
-                      <TableCell className="text-right font-semibold">{money(totalVal, currency)}</TableCell>
-                      <TableCell colSpan={2} />
-                    </TableRow> */}
-                  </TableBody>
-                </Table>
-              </div>
+                    <TableBody>
+                      {invoiceDetails.items.map((it) => (
+                        <TableRow key={it.id}>
+                          <TableCell className="whitespace-nowrap  text-center">{it.itemCode}</TableCell>
+                          <TableCell className="whitespace-nowrap  text-center">{it.brand}</TableCell>
+                          <TableCell className="whitespace-nowrap  text-center">{it.condition}</TableCell>
+                          <TableCell className="whitespace-nowrap  text-center">{it.model}</TableCell>
+                          <TableCell className="min-w-[220px] text-center">{it.commercialName}</TableCell>
+                          <TableCell className="min-w-[240px] text-center">{it.description}</TableCell>
+                          <TableCell className="whitespace-nowrap text-center">{it.material}</TableCell>
+                          <TableCell className="min-w-[220px] text-center">{it.mainUse}</TableCell>
+                          <TableCell className="whitespace-nowrap text-center">{it.quantity}</TableCell>
+                          <TableCell className="whitespace-nowrap text-center">{it.unitType}</TableCell>
+                          <TableCell className="whitespace-nowrap text-center">{it.countryOfOrigin}</TableCell>
+                          <TableCell className="whitespace-nowrap text-center">{it.countryOfAcquisition}</TableCell>
+                          <TableCell className="whitespace-nowrap text-center">{money(it.unitPrice)}</TableCell>
+                          <TableCell className="whitespace-nowrap text-center">{money(it.totalPrice)}</TableCell>
+                          <TableCell className="whitespace-nowrap text-center">{it.suggestedHsCode}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
             </CardContent>
           </Card>
 

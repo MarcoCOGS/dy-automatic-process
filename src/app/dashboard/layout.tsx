@@ -39,9 +39,9 @@ export default async function Layout({ children }: LayoutProps) {
 
   return (
     <SessionProvider>
-      <SidebarProvider className='max-w-screen'>
+      <SidebarProvider className=''>
         <AppSidebar organizations={organizations} activeOrganizationId={session.organization.id} />
-        <SidebarInset className='max-w-screen'>
+        <SidebarInset className='w-screen'>
           <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
             <div className='flex items-center gap-2 px-4'>
               <SidebarTrigger className='-ml-1' />
@@ -66,11 +66,11 @@ export default async function Layout({ children }: LayoutProps) {
               <div className='aspect-video rounded-xl bg-muted/50' />
             </div>
             <div className='min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min' /> */}
-            <div>
+            <div className=''>
               <Suspense>{children}</Suspense>
             </div>
           </div>
-          </SidebarInset>
+        </SidebarInset>
       </SidebarProvider>
     </SessionProvider>
   );
