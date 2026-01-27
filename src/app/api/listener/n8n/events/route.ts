@@ -157,7 +157,7 @@ export async function POST(req: Request) {
     model: p.modelo,
     commercialName: p.nombre_comercial,
     description: p.descripcion_minima,
-    codigo: p.codigo,
+    code: p.codigo,
     material: p.material,
     mainUse: p.uso_funcion,
     quantity: p.cantidad,
