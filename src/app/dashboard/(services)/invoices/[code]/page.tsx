@@ -271,6 +271,7 @@ export default async function Page({
                         <TableHead className="whitespace-nowrap text-center">{'MARCA'}</TableHead>
                         <TableHead className="whitespace-nowrap text-center">{'NUEVO/USADO'}</TableHead>
                         <TableHead className="whitespace-nowrap text-center">{'MODELO'}</TableHead>
+                        <TableHead className="whitespace-nowrap text-center">{'CODIGO'}</TableHead>
                         <TableHead className="whitespace-nowrap text-center">{'NOMBRE COMERCIAL'}</TableHead>
                         <TableHead className="whitespace-nowrap text-center">{'DESCRIPCIÓN MÍNIMA'}</TableHead>
                         <TableHead className="whitespace-nowrap text-center">{'MATERIAL'}</TableHead>
@@ -292,6 +293,7 @@ export default async function Page({
                           <TableCell className="whitespace-nowrap  text-center">{it.brand}</TableCell>
                           <TableCell className="whitespace-nowrap  text-center">{it.condition}</TableCell>
                           <TableCell className="whitespace-nowrap  text-center">{it.model}</TableCell>
+                          <TableCell className="min-w-[220px] text-center">{it.code}</TableCell>
                           <TableCell className="min-w-[220px] text-center">{it.commercialName}</TableCell>
                           <TableCell className="min-w-[240px] text-center">{it.description}</TableCell>
                           <TableCell className="whitespace-nowrap text-center">{it.material}</TableCell>

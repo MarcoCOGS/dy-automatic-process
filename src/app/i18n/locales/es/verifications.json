@@ -66,6 +66,7 @@
       "itemNumber": "Ítem",
       "brand": "Marca",
       "model": "Modelo",
+      "codigo": "Código",
       "commercialName": "Nombre comercial / Producto",
       "description": "Descripción mínima",
       "material": "Material",

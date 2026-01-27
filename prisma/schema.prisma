@@ -80,6 +80,7 @@ model InvoiceItem {
   condition            String?
   referenceCountry     String?
   suggestedHsCode      String?
+  code                 String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
