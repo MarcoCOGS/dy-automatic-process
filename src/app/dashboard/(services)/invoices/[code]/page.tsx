@@ -15,6 +15,8 @@ import { Invoice as InvoiceType,} from '../lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+// import { DownloadExcelButton } from '../ui/components/download-invoice';
+import { DownloadExcelButton2 } from '../ui/components/download-invoice2';
 
 // import OpenFile from '../ui/open-file';
 
@@ -83,10 +85,25 @@ export default async function Page({
           <h2 className="text-2xl font-bold tracking-tight">{t('invoicesDetail.title')}</h2>
           <p className="text-muted-foreground">{t('invoicesDetail.description')}</p>
         </div>
-
-        <Button variant="secondary" asChild>
-          <Link href="/dashboard/invoices">{t('buttons.back')}</Link>
-        </Button>
+        <div className='flex gap-10'>
+          {/* <div>
+            <DownloadExcelButton
+              invoiceDetails={invoiceDetails}
+              label={t('buttons.download')}
+            />
+          </div> */}
+          <div>
+            <DownloadExcelButton2
+              invoiceDetails={invoiceDetails}
+              label={t('buttons.download')}
+            />
+          </div>
+          <div>
+            <Button variant="secondary" asChild>
+              <Link href="/dashboard/invoices">{t('buttons.back')}</Link>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Header band */}

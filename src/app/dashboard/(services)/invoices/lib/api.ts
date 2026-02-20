@@ -82,7 +82,6 @@ export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Pr
     // fd.append('1_extraInfo', request.files.extraInfoFile[0]);
     request.files.extraInfoFile.forEach((file, index)=>fd.append(`${index}_extraInfo`, file))
   }
-
     const response = await apiVerifications.post(ServerConfig.webhookPath,
   fd,
   {
