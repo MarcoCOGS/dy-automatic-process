@@ -1,12 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import type { InvoiceItem } from '@prisma/client';
 import { Invoice } from '../../lib/definitions';
 import * as ExcelJS from 'exceljs';
+import { InvoiceItemUi } from '../../lib/api';
 
 type Props = {
-  invoiceDetails: Invoice & { items: InvoiceItem[] };
+  invoiceDetails: Invoice & { items: InvoiceItemUi[] };
   label: string;
 };
 

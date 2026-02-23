@@ -64,23 +64,15 @@ export interface KeynuaIdentityVerification extends IdentityVerification {
   readonly token: string;
 }
 
-export interface Invoice {
-  readonly id: string;
-  readonly invoiceCode: string;
-  readonly state: string;
-  readonly comment?: string;
-  readonly page?: number;
-  readonly totalPage?: number;
-
-  readonly invoiceInfo?: {
+export interface InvoiceInfo {
     readonly invoiceNumber?: string;
     readonly incoterms?: string;
     readonly acquisitionCountry?: string;
     readonly currency?: string;
     readonly deliveryPlace?: string;
-  };
+};
 
-  readonly supplierInfo?: {
+export interface SupplierInfo {
     readonly affiliation?: string;
     readonly legalName?: string;
     readonly address?: string;
@@ -88,22 +80,32 @@ export interface Invoice {
     readonly contactName?: string;
     readonly phoneNumber?: string;
     readonly condition?: string;
-  };
+};
 
-  readonly transactionInfo?: {
+export interface TransactionInfo {
     readonly paymentMethod?: string;
     readonly bank?: string;
     readonly paymentChannel?: string;
     readonly receiptNumber?: string;
-  };
+};
 
-  readonly legalRepresentativeInfo?: {
+export interface LegalRepresentativeInfo {
     readonly fullName?: string;
     readonly position?: string;
     readonly nationalId?: string;
-    readonly signatureUrl?: string;
   };
 
+export interface Invoice {
+  readonly id: string;
+  readonly invoiceCode: string;
+  readonly state: string;
+  readonly comment?: string;
+  readonly page?: number;
+  readonly totalPage?: number;
+  readonly invoiceInfo?: InvoiceInfo
+  readonly supplierInfo?: SupplierInfo
+  readonly transactionInfo?: TransactionInfo
+  readonly legalRepresentativeInfo?: LegalRepresentativeInfo
   readonly organizationId: string;
   readonly createdAt: string;
   readonly updatedAt: string;
