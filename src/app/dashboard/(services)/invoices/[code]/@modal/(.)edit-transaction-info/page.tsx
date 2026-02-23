@@ -9,7 +9,7 @@ import { SubmitAndClose } from '../../../ui/components/edit-transaction-info/Sub
 export default async function EditTransactionInfoPage({
   params,
 }: {
-  params: { code: string }
+  params: Promise<{ code: string }>
   }) {
   const params2 = await params
   const code = params2.code

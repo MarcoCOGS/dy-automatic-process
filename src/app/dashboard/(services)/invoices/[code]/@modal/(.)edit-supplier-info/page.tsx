@@ -9,7 +9,7 @@ import { SubmitAndClose } from '../../../ui/components/edit-supplier-info/Submit
 export default async function EditSupplierInfoPage({
   params,
 }: {
-  params: { code: string }
+  params: Promise<{ code: string }>
   }) {
   const params2 = await params
   const code = params2.code

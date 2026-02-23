@@ -9,7 +9,7 @@ import { SubmitAndClose } from '../../../ui/components/edit-invoice-info/SubmitA
 export default async function EditInvoiceInfoPage({
   params,
 }: {
-  params: { code: string }
+  params: Promise<{ code: string }>
   }) {
   const params2 = await params
   const code = params2.code

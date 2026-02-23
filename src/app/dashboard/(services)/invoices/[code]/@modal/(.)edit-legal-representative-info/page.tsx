@@ -9,7 +9,7 @@ import { SubmitAndClose } from '../../../ui/components/edit-legal-representative
 export default async function EditLegalRepresentativeInfoPage({
   params,
 }: {
-  params: { code: string }
+  params: Promise<{ code: string }>
   }) {
   const params2 = await params
   const code = params2.code
