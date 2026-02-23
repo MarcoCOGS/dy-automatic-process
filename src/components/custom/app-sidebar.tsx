@@ -1,9 +1,13 @@
 'use client';
 
-import type { Organization } from '@prisma/client';
 import { FileCheck2, FlaskConical, GalleryVerticalEnd, Link, MailPlus, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-
+type Organization = {
+    name: string;
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
 // import { useTranslation } from '@/app/i18n/client';
 import { NavProjects } from '@/components/custom/nav-projects';
 import { NavUser } from '@/components/custom/nav-user';
