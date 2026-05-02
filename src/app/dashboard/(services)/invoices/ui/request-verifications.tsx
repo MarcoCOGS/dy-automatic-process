@@ -30,14 +30,12 @@ import { checkInvoiceStatusAction, requestVerifications } from '../actions';
 
 const fileSizeLimit = 1024 * 1024 * 10;
 
-const xlsxFileType = mime.lookup('xlsx') as string;
 const pdfFileType = mime.lookup('pdf') as string;
 const imageTypes = [
   mime.lookup('jpg') as string,
   mime.lookup('jpeg') as string,
   mime.lookup('png') as string,
   mime.lookup('webp') as string,
-  mime.lookup('svg') as string,
 ];
 
 const formSchema = z.object({
@@ -55,8 +53,8 @@ const formSchema = z.object({
           .refine((files) => {
             if (!files?.length) return true;
             const type = mime.lookup(files[0].name);
-            return type === pdfFileType || type === xlsxFileType;
-          }, 'La factura debe ser PDF o Excel (.xlsx).')
+            return type === pdfFileType;
+          }, 'La factura debe ser PDF.')
           .refine((files) => {
             if (!files?.length) return true;
             return files[0].size <= fileSizeLimit;
@@ -91,6 +89,15 @@ const formSchema = z.object({
             .refine(
               (files) => !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
               'Algún archivo adicional supera el tamaño máximo de 10MB.',
+            )
+            .refine(
+              (files) =>
+                !files.length ||
+                Array.from(files).every((f) => {
+                  const type = mime.lookup(f.name);
+                  return type === pdfFileType || imageTypes.includes(type as string);
+                }),
+              'Los archivos adicionales deben ser PDF, JPG, PNG o WEBP.',
             )
             .optional(),
         ),
@@ -278,18 +285,18 @@ export default function RequestVerifications() {
                 name='invoice'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Factura Comercial (PDF / Excel)</FormLabel>
+                    <FormLabel>Factura Comercial (PDF)</FormLabel>
                     <FormControl>
                       <Input
                         type='file'
-                        accept={`${pdfFileType},${xlsxFileType}`}
+                        accept={pdfFileType}
                         disabled={isPending}
                         // react-hook-form maneja FileList con onChange + ref
                         onChange={(e) => field.onChange(e.target.files)}
                         ref={field.ref}
                       />
                     </FormControl>
-                    <FormDescription>Formato permitido: PDF / .xlsx | Tamaño máximo: 10MB.</FormDescription>
+                    <FormDescription>Formato permitido: PDF | Tamaño máximo: 10MB.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -304,7 +311,7 @@ export default function RequestVerifications() {
                       <Input
                         type='file'
                         multiple
-                        accept='image/*'
+                        accept={imageTypes.join(',')}
                         disabled={isPending}
                         onChange={(e) => field.onChange(e.target.files)}
                         ref={field.ref}
@@ -326,12 +333,13 @@ export default function RequestVerifications() {
                       <Input
                         type='file'
                         disabled={isPending}
+                        accept={`${pdfFileType},${imageTypes.join(',')}`}
                         onChange={(e) => field.onChange(e.target.files)}
                         multiple
                         ref={field.ref}
                       />
                     </FormControl>
-                    <FormDescription>Archivo opcional | Tamaño máximo: 10MB.</FormDescription>
+                    <FormDescription>Formatos permitidos: PDF, JPG, PNG, WEBP | Tamaño máximo: 10MB.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
