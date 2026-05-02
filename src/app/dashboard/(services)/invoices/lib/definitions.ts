@@ -12,14 +12,19 @@ export interface CreateManyVerificationsRequest {
   readonly organizationId: string;
 }
 
-export interface PostSendFilesToN8nRequest {
-  readonly invoiceId: string;
+export interface RequestInvoiceProcessingRequest {
   readonly invoiceNumber: string;
   readonly files: {
     readonly invoiceFile: File;
     readonly productPhotosFile?: File[];
     readonly extraInfoFile?: File[];
-  }
+  };
+}
+
+export interface RequestInvoiceProcessingResponse {
+  readonly success: boolean;
+  readonly invoiceId: string;
+  readonly message: string;
 }
 
 export interface GenerateSignedGetUrlRequest {
@@ -65,35 +70,35 @@ export interface KeynuaIdentityVerification extends IdentityVerification {
 }
 
 export interface InvoiceInfo {
-    readonly invoiceNumber?: string;
-    readonly incoterms?: string;
-    readonly acquisitionCountry?: string;
-    readonly currency?: string;
-    readonly deliveryPlace?: string;
-};
+  readonly invoiceNumber?: string;
+  readonly incoterms?: string;
+  readonly acquisitionCountry?: string;
+  readonly currency?: string;
+  readonly deliveryPlace?: string;
+}
 
 export interface SupplierInfo {
-    readonly affiliation?: string;
-    readonly legalName?: string;
-    readonly address?: string;
-    readonly cityCountry?: string;
-    readonly contactName?: string;
-    readonly phoneNumber?: string;
-    readonly condition?: string;
-};
+  readonly affiliation?: string;
+  readonly legalName?: string;
+  readonly address?: string;
+  readonly cityCountry?: string;
+  readonly contactName?: string;
+  readonly phoneNumber?: string;
+  readonly condition?: string;
+}
 
 export interface TransactionInfo {
-    readonly paymentMethod?: string;
-    readonly bank?: string;
-    readonly paymentChannel?: string;
-    readonly receiptNumber?: string;
-};
+  readonly paymentMethod?: string;
+  readonly bank?: string;
+  readonly paymentChannel?: string;
+  readonly receiptNumber?: string;
+}
 
 export interface LegalRepresentativeInfo {
-    readonly fullName?: string;
-    readonly position?: string;
-    readonly nationalId?: string;
-  };
+  readonly fullName?: string;
+  readonly position?: string;
+  readonly nationalId?: string;
+}
 
 export interface Invoice {
   readonly id: string;
@@ -102,15 +107,14 @@ export interface Invoice {
   readonly comment?: string;
   readonly page?: number;
   readonly totalPage?: number;
-  readonly invoiceInfo?: InvoiceInfo
-  readonly supplierInfo?: SupplierInfo
-  readonly transactionInfo?: TransactionInfo
-  readonly legalRepresentativeInfo?: LegalRepresentativeInfo
+  readonly invoiceInfo?: InvoiceInfo;
+  readonly supplierInfo?: SupplierInfo;
+  readonly transactionInfo?: TransactionInfo;
+  readonly legalRepresentativeInfo?: LegalRepresentativeInfo;
   readonly organizationId: string;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
-
 
 export enum DocumentType {
   DNI = 'DNI',

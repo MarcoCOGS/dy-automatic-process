@@ -1,11 +1,7 @@
 'use server';
 
-import axios from 'axios';
-
 import { getSession } from '@/lib/session';
 import { tryCatch } from '@/lib/try-catch';
-import { v4 as uuidv4 } from 'uuid';
-import { PrismaClient } from '@prisma/client';
 
 import * as api from './lib/api';
 
@@ -15,14 +11,10 @@ type ValidationError = {
   invoiceId: string;
 };
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
 function formatErrorMessages(errors: ValidationError[]): string {
   const groupedErrors: Record<number, string[]> = errors.reduce(
     (acc, { index, errors }) => {
-      const rowNumber = index + 1; // Ajustamos la numeración a la de Excel
+      const rowNumber = index + 1;
       acc[rowNumber] = acc[rowNumber] || [];
       errors.forEach((error) => {
         acc[rowNumber].push(error);
@@ -38,7 +30,19 @@ function formatErrorMessages(errors: ValidationError[]): string {
     .join('\n\n');
 }
 
-export const requestVerifications = async(formData: FormData): Promise<{ success: boolean; message: string, invoiceId?: string }> =>{
+function getValidationErrors(error: unknown): ValidationError[] | null {
+  if (!error || typeof error !== 'object') return null;
+
+  const data = (error as { data?: unknown }).data;
+  if (!data || typeof data !== 'object') return null;
+
+  const record = data as Record<string, unknown>;
+  return Array.isArray(record.error) ? (record.error as ValidationError[]) : null;
+}
+
+export const requestVerifications = async (
+  formData: FormData,
+): Promise<{ success: boolean; message: string; invoiceId?: string }> => {
   const session = await getSession();
 
   if (!session) {
@@ -50,72 +54,51 @@ export const requestVerifications = async(formData: FormData): Promise<{ success
 
   const invoice = formData.get('invoice') as File | null;
   if (!invoice) return { success: false, message: 'Debes subir la factura.' };
-  const productPhotos = formData.getAll('productPhotos') as File[];
-  const extraInfo = formData.getAll('extraInfo') as File[];
-  const invoiceNumber = formData.get('invoiceNumber') as string
-  console.log({invoiceNumber})
-  if (!invoiceNumber) return { success: false, message: 'Debes Ingresar el número de factura.' };
 
-  const invoiceCode = await prisma.invoice.findUnique({
-    where: { invoiceCode: invoiceNumber },
-    select: { state: true, id: true },
-  });
-
-  if (invoiceCode) {
-    return { success: false, message: 'Numero de Factura ya existe' };
+  const invoiceNumber = formData.get('invoiceNumber') as string;
+  if (!invoiceNumber) {
+    return { success: false, message: 'Debes ingresar el numero de factura.' };
   }
 
-  // const signedPutUrl = await api.generateSignedPutUrl({
-  //   fileName: file.name,
-  // });
-
-  // await axios({
-  //   url: signedPutUrl.url,
-  //   method: 'PUT',
-  //   data: file,
-  //   headers: {
-  //     'Content-Type': signedPutUrl.contentType,
-  //   },
-  // });
-  const invoiceId = uuidv4();
+  const productPhotos = formData.getAll('productPhotos') as File[];
+  const extraInfo = formData.getAll('extraInfo') as File[];
 
   const response = await tryCatch(
-    api.postSendFilesToN8n({
-      invoiceId,
+    api.requestInvoiceProcessing({
       invoiceNumber,
       files: {
         invoiceFile: invoice,
-        ...(productPhotos?{productPhotosFile: productPhotos}:{}),
-        ...(extraInfo?{extraInfoFile: extraInfo}:{}),
-      }
+        ...(productPhotos.length ? { productPhotosFile: productPhotos } : {}),
+        ...(extraInfo.length ? { extraInfoFile: extraInfo } : {}),
+      },
     }),
   );
 
-  if (response.error && axios.isAxiosError(response.error)) {
-    if (response.error.response?.data.statusCode === 400) {
-      const errors = response.error.response?.data.error as ValidationError[];
+  if (response.error) {
+    const validationErrors = getValidationErrors(response.error);
 
+    if (validationErrors) {
       return {
         success: false,
-        message: formatErrorMessages(errors),
+        message: formatErrorMessages(validationErrors),
       };
     }
 
     return {
       success: false,
-      message: 'Error al procesar la Factura.',
+      message: response.error.message || 'Error al procesar la Factura.',
     };
   }
 
   return {
     success: true,
-    invoiceId,
-    message: 'Factura siendo procesada ...',
+    invoiceId: response.data.invoiceId,
+    message: response.data.message,
   };
-}
+};
 
-export const checkInvoiceStatusAction = async(
-  invoiceId: string
+export const checkInvoiceStatusAction = async (
+  invoiceId: string,
 ): Promise<{ success: boolean; message: string; invoiceId?: string }> => {
   const session = await getSession();
 
@@ -126,16 +109,13 @@ export const checkInvoiceStatusAction = async(
     };
   }
 
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: invoiceId },
-    select: { state: true, id: true, invoiceCode: true },
-  });
+  const invoice = await api.findInvoiceStatus({ invoiceId });
 
   if (!invoice) {
     return { success: false, message: 'Invoice not found.' };
   }
 
-  if (invoice.state !== 'DONE') {
+  if (invoice.state === 'ERROR') {
     return {
       success: false,
       invoiceId: invoice.id,
@@ -143,8 +123,15 @@ export const checkInvoiceStatusAction = async(
     };
   }
 
+  if (invoice.state !== 'DONE') {
+    return {
+      success: false,
+      message: 'Factura aun en procesamiento.',
+    };
+  }
+
   return {
     success: true,
     message: 'Factura procesada correctamente',
   };
-}
+};

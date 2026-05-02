@@ -25,8 +25,8 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { tryCatch } from '@/lib/try-catch';
-import { checkInvoiceStatusAction, requestVerifications } from '../actions';
 
+import { checkInvoiceStatusAction, requestVerifications } from '../actions';
 
 const fileSizeLimit = 1024 * 1024 * 10;
 
@@ -40,88 +40,75 @@ const imageTypes = [
   mime.lookup('svg') as string,
 ];
 
-const formSchema = z
-  .object({
-    invoiceNumber: z
-      .string({
-        required_error: 'Debes ingresar el número de factura.',
-      })
-      .min(1, 'Debes ingresar el número de factura.'),
-    invoice:
-      typeof window === 'undefined'
-        ? z.any()
-        : z
-            .preprocess(
-              (v) => (v instanceof FileList ? v : undefined),
-              z.instanceof(FileList).optional(),
-            )
-            .refine((files) => !!files && files.length === 1, 'Debes subir la factura.')
+const formSchema = z.object({
+  invoiceNumber: z
+    .string({
+      required_error: 'Debes ingresar el número de factura.',
+    })
+    .min(1, 'Debes ingresar el número de factura.'),
+  invoice:
+    typeof window === 'undefined'
+      ? z.any()
+      : z
+          .preprocess((v) => (v instanceof FileList ? v : undefined), z.instanceof(FileList).optional())
+          .refine((files) => !!files && files.length === 1, 'Debes subir la factura.')
+          .refine((files) => {
+            if (!files?.length) return true;
+            const type = mime.lookup(files[0].name);
+            return type === pdfFileType || type === xlsxFileType;
+          }, 'La factura debe ser PDF o Excel (.xlsx).')
+          .refine((files) => {
+            if (!files?.length) return true;
+            return files[0].size <= fileSizeLimit;
+          }, 'La factura es demasiado grande. Máximo 10MB.'),
+  productPhotos:
+    typeof window === 'undefined'
+      ? z.any()
+      : z.preprocess(
+          (v) => (v instanceof FileList ? v : undefined),
+          z
+            .instanceof(FileList)
+            .refine((files) => files.length <= 3, 'Puedes subir como máximo 3 archivos.')
             .refine(
-              (files) => {
-                if (!files?.length) return true;
-                const type = mime.lookup(files[0].name);
-                return type === pdfFileType || type === xlsxFileType;
-              },
-              'La factura debe ser PDF o Excel (.xlsx).',
+              (files) =>
+                !files.length || Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
+              'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
             )
             .refine(
-              (files) => {
-                if (!files?.length) return true;
-                return files[0].size <= fileSizeLimit;
-              },
-              'La factura es demasiado grande. Máximo 10MB.',
-            ),
-    productPhotos:
-      typeof window === 'undefined'
-        ? z.any()
-        : z
-            .preprocess(
-              (v) => (v instanceof FileList ? v : undefined),
-              z
-                .instanceof(FileList)
-                .refine((files) => files.length <= 3, 'Puedes subir como máximo 3 archivos.')
-                .refine(
-                  (files) =>
-                    !files.length ||
-                    Array.from(files).every((f) => imageTypes.includes(mime.lookup(f.name) as string)),
-                  'Las fotos deben ser imágenes (JPG, PNG, WEBP).',
-                )
-                .refine(
-                  (files) => !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
-                  'Alguna foto supera el tamaño máximo de 10MB.',
-                )
-                .optional(),
-            ),
-    extraInfo:
-      typeof window === 'undefined'
-        ? z.any()
-        : z
-            .preprocess(
-              (v) => (v instanceof FileList ? v : undefined),
-              z
-                .instanceof(FileList)
-                .refine((files) => files.length <= 3, 'Puedes subir como máximo 3 archivos.')
-                .refine(
-                  (files) => !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
-                  'Algún archivo adicional supera el tamaño máximo de 10MB.',
-                )
-                .optional(),
-            ),
-  });
+              (files) => !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
+              'Alguna foto supera el tamaño máximo de 10MB.',
+            )
+            .optional(),
+        ),
+  extraInfo:
+    typeof window === 'undefined'
+      ? z.any()
+      : z.preprocess(
+          (v) => (v instanceof FileList ? v : undefined),
+          z
+            .instanceof(FileList)
+            .refine((files) => files.length <= 3, 'Puedes subir como máximo 3 archivos.')
+            .refine(
+              (files) => !files.length || Array.from(files).every((f) => f.size <= fileSizeLimit),
+              'Algún archivo adicional supera el tamaño máximo de 10MB.',
+            )
+            .optional(),
+        ),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function RequestVerifications() {
   const { t } = useTranslation('es', 'verifications');
   const submittingRef = useRef(false);
-  console.log(t)
+  console.log(t);
   const [isPending, startTransition] = useTransition();
   // const [isPending2, startTransition2] = useTransition();
   const router = useRouter();
   // const [hasEverSucceeded, setHasEverSucceeded] = useState(false);
   const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false)
-  const [invoiceId, setinvoiceId] = useState<undefined | string | null>(null)
+  const [isLoading, setIsLoading] = useState(false);
+  const [invoiceId, setinvoiceId] = useState<undefined | string | null>(null);
   const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
@@ -133,8 +120,8 @@ export default function RequestVerifications() {
     submittingRef.current = true;
     startTransition(async () => {
       const formData = new FormData();
-      const invoiceNumber = data.invoiceNumber
-      if(invoiceNumber) formData.append('invoiceNumber', invoiceNumber);
+      const invoiceNumber = data.invoiceNumber;
+      if (invoiceNumber) formData.append('invoiceNumber', invoiceNumber);
 
       const invoiceFile = data.invoice?.[0];
       if (invoiceFile) {
@@ -167,17 +154,16 @@ export default function RequestVerifications() {
           });
           setMessage('');
           // setHasEverSucceeded(true);
-          setIsLoading(true)
-          setOpen(false)
-          setinvoiceId(response.data.invoiceId)
+          setIsLoading(true);
+          setOpen(false);
+          setinvoiceId(response.data.invoiceId);
           form.reset();
           submittingRef.current = false;
         } else {
           setMessage(response.data.message);
-          setIsLoading(false)
+          setIsLoading(false);
         }
       }
-
     });
   }
 
@@ -186,7 +172,7 @@ export default function RequestVerifications() {
       setMessage('');
     } else {
       form.reset();
-      setOpen(false)
+      setOpen(false);
 
       // if (hasEverSucceeded) {
       //   startTransition2(() => {
@@ -197,55 +183,55 @@ export default function RequestVerifications() {
     }
   }
 
-useEffect(() => {
-  if (!invoiceId) return;
+  useEffect(() => {
+    if (!invoiceId) return;
 
-  let cancelled = false;
-  let timeoutId: NodeJS.Timeout;
+    let cancelled = false;
+    let timeoutId: NodeJS.Timeout;
 
-  const poll = async () => {
-    try {
-      const response = await tryCatch(checkInvoiceStatusAction(invoiceId));
+    const poll = async () => {
+      try {
+        const response = await tryCatch(checkInvoiceStatusAction(invoiceId));
 
-      if (response?.data?.invoiceId) {
-        if (!cancelled) {
-          setinvoiceId(null);
-          setIsLoading(false)
-          toast('Error interno, contacte al administrador', {
-            description: response.data.message,
-          });
+        if (response?.data?.invoiceId) {
+          if (!cancelled) {
+            setinvoiceId(null);
+            setIsLoading(false);
+            toast('Error interno, contacte al administrador', {
+              description: response.data.message,
+            });
+          }
+          return;
         }
-        return;
-      }
 
-      if (response?.data?.success) {
-        if (!cancelled) {
-          setinvoiceId(null);
-          setIsLoading(false)
-          router.refresh();
+        if (response?.data?.success) {
+          if (!cancelled) {
+            setinvoiceId(null);
+            setIsLoading(false);
+            router.refresh();
+          }
+          return;
         }
-        return;
+
+        if (!cancelled) {
+          timeoutId = setTimeout(poll, 5000);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (!cancelled) {
+          timeoutId = setTimeout(poll, 5000);
+        }
       }
+    };
 
-      if (!cancelled) {
-        timeoutId = setTimeout(poll, 5000);
-      }
-    } catch (error) {
-      console.error(error);
+    poll();
 
-      if (!cancelled) {
-        timeoutId = setTimeout(poll, 5000);
-      }
-    }
-  };
-
-  poll();
-
-  return () => {
-    cancelled = true;
-    if (timeoutId) clearTimeout(timeoutId);
-  };
-}, [invoiceId]);
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [invoiceId, router]);
 
   return (
     <>
@@ -276,9 +262,9 @@ useEffect(() => {
                         type='text'
                         placeholder='Ingresa Número de factura'
                         disabled={isPending}
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
+                        autoComplete='off'
+                        autoCorrect='off'
+                        autoCapitalize='off'
                         onChange={(e) => field.onChange(e.target.value)}
                         ref={field.ref}
                       />

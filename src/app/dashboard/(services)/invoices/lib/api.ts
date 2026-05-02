@@ -1,7 +1,6 @@
 'use server';
 
-import axios from 'axios';
-import _ from 'lodash';
+import { getSession } from '@/lib/session';
 
 import {
   CreateManyVerificationsRequest,
@@ -13,375 +12,280 @@ import {
   InvoiceInfo,
   Invoice as InvoiceType,
   LegalRepresentativeInfo,
-  PostSendFilesToN8nRequest,
+  RequestInvoiceProcessingRequest,
+  RequestInvoiceProcessingResponse,
   SupplierInfo,
   TransactionInfo,
 } from './definitions';
 import { ServerConfig } from './server-config';
-import { getSession } from '@/lib/session';
-import { Invoice, PrismaClient, InvoiceItem } from '@prisma/client';
 
-export type InvoiceItemUi = Omit<
-    InvoiceItem,
-    | 'createdAt'
-    | 'updatedAt'
-    | 'invoiceId'
-    | 'taxRate'
-    | 'taxAmount'
-    | 'discountAmount'
-    | 'referenceCountry'
-    | 'unitPrice'
-    | 'totalPrice'
-  > & {
-    unitPrice?: string
-    totalPrice?: string
+class BackendApiError extends Error {
+  readonly status: number;
+  readonly data: unknown;
+
+  constructor(message: string, status: number, data: unknown) {
+    super(message);
+    this.name = 'BackendApiError';
+    this.status = status;
+    this.data = data;
+  }
 }
 
-export type InvoiceItemUpdatable = Omit<
-    InvoiceItem,
-    | 'id'
-    | 'createdAt'
-    | 'updatedAt'
-    | 'invoiceId'
-    | 'taxRate'
-    | 'taxAmount'
-    | 'discountAmount'
-    | 'referenceCountry'
-    | 'unitPrice'
-    | 'totalPrice'
-  > & {
-    unitPrice?: string
-    totalPrice?: string
+export type InvoiceItemUi = {
+  id: string;
+  itemCode: string | null;
+  description: string | null;
+  quantity: number | null;
+  unitType: string | null;
+  brand: string | null;
+  model: string | null;
+  commercialName: string | null;
+  material: string | null;
+  mainUse: string | null;
+  countryOfOrigin: string | null;
+  countryOfAcquisition: string | null;
+  condition: string | null;
+  suggestedHsCode: string | null;
+  code: string | null;
+  unitPrice?: string | null;
+  totalPrice?: string | null;
+};
+
+export type InvoiceItemUpdatable = Omit<InvoiceItemUi, 'id'>;
+
+type RequestOptions = {
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  body?: Record<string, unknown> | FormData;
+  headers?: HeadersInit;
+  notFoundAsNull?: boolean;
+};
+
+const buildBackendUrl = (path: string) => {
+  if (!ServerConfig.nestApiBaseUrl) {
+    throw new Error('NEST_API_BASE_URL is not configured');
   }
 
-const apiVerifications = axios.create({
-  baseURL: ServerConfig.apiVerificationsBaseUrl,
-  auth: {
-    username: ServerConfig.apiVerificationsUsername,
-    password: ServerConfig.apiVerificationsPassword,
-  },
-});
+  return new URL(path.replace(/^\//, ''), `${ServerConfig.nestApiBaseUrl.replace(/\/$/, '')}/`).toString();
+};
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+const readResponse = async (response: Response) => {
+  const text = await response.text();
+
+  if (!text) return undefined;
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return text;
+  }
+};
+
+const getErrorMessage = (data: unknown, fallback: string) => {
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    const message = record.message;
+    const error = record.error;
+
+    if (typeof message === 'string') return message;
+    if (typeof error === 'string') return error;
+    if (Array.isArray(message)) return message.join(', ');
+  }
+
+  if (typeof data === 'string') return data;
+
+  return fallback;
+};
+
+const backendFetch = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
+  const headers = new Headers(options.headers);
+  const init: RequestInit = {
+    method: options.method ?? 'GET',
+    headers,
+    cache: 'no-store',
+  };
+
+  if (options.body instanceof FormData) {
+    init.body = options.body;
+  } else if (options.body) {
+    headers.set('Content-Type', 'application/json');
+    init.body = JSON.stringify(options.body);
+  }
+
+  const response = await fetch(buildBackendUrl(path), init);
+  const data = await readResponse(response);
+
+  if (response.status === 404 && options.notFoundAsNull) {
+    return null as T;
+  }
+
+  if (!response.ok) {
+    throw new BackendApiError(
+      getErrorMessage(data, `Backend request failed with status ${response.status}`),
+      response.status,
+      data,
+    );
+  }
+
+  return data as T;
+};
 
 export const findManyInvoices = async (): Promise<InvoiceType[]> => {
-  try {
-    const data = await prisma.invoice.findMany();
-
-    return data as unknown as InvoiceType[];
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+  return backendFetch<InvoiceType[]>('/invoices');
 };
 
-export const findInvoiceDetail = async ({ code }: {code: string}): Promise< Invoice & {items: InvoiceItemUi[]} | null> => {
-  try {
-    const invoice = await prisma.invoice.findUnique({
-      where: { id: code },
-      include: {
-        items: true,
-      },
-    });
-
-    if (!invoice) return null
-
-    const items: InvoiceItemUi[] = invoice.items.map((it) => ({
-      ...it,
-      quantity: it.quantity === null ? null : Number(it.quantity),
-      unitPrice: it.unitPrice?.toString(),
-      totalPrice: it.totalPrice?.toString(),
-    }))
-
-    return {
-      ...invoice,
-      items,
-    }
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
-};
-
-export const findInvoiceItemDetail = async ({ itemId }: {itemId: string}): Promise< InvoiceItemUpdatable | null> => {
-  try {
-    const data = await prisma.invoiceItem.findUnique({
-    where: { id: itemId },
+export const findInvoiceDetail = async ({
+  code,
+}: {
+  code: string;
+}): Promise<(InvoiceType & { items: InvoiceItemUi[] }) | null> => {
+  return backendFetch<InvoiceType & { items: InvoiceItemUi[] }>(`/invoices/${code}`, {
+    notFoundAsNull: true,
   });
-    if (!data) {
-    throw new Error('ERROR')
-  }
-    return {
-      itemCode: data.itemCode,
-      brand: data.brand,
-      condition: data.condition,
-      model: data.model,
-      code: data.code,
-      commercialName: data.commercialName,
-      description: data.description,
-      material: data.material,
-      mainUse: data.mainUse,
-      quantity: Number(data.quantity),
-      unitType: data.unitType,
-      countryOfOrigin: data.countryOfOrigin,
-      countryOfAcquisition: data.countryOfAcquisition,
-      unitPrice: data.unitPrice?.toString(),
-      totalPrice: data.totalPrice?.toString(),
-      suggestedHsCode: data.suggestedHsCode,
-    }
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
 };
 
-export const updateInvoiceInfo = async ({ code, data }: {code: string, data: InvoiceInfo}): Promise<void> => {
-  try {
-    await prisma.invoice.update({
-      where: { id: code },
-      data: {
-        invoiceInfo: {
-          invoiceNumber: data.invoiceNumber,
-          incoterms: data.incoterms,
-          acquisitionCountry: data.acquisitionCountry,
-          currency: data.currency,
-          deliveryPlace: data.deliveryPlace,
-        },
-      },
-    })
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+export const findInvoiceStatus = async ({
+  invoiceId,
+}: {
+  invoiceId: string;
+}): Promise<{ id: string; state: string; invoiceCode: string } | null> => {
+  return backendFetch<{ id: string; state: string; invoiceCode: string } | null>(`/invoices/${invoiceId}/status`);
 };
 
-export const updateSupplierInfo = async ({ code, data }: {code: string, data: SupplierInfo}): Promise<void> => {
-  try {
-    await prisma.invoice.update({
-      where: { id: code },
-      data: {
-        supplierInfo: {
-          affiliation: data.affiliation,
-          legalName: data.legalName,
-          address: data.address,
-          cityCountry: data.cityCountry,
-          contactName: data.contactName,
-          phoneNumber: data.phoneNumber,
-          condition: data.condition
-        },
-      },
-    })
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+export const findInvoiceItemDetail = async ({ itemId }: { itemId: string }): Promise<InvoiceItemUpdatable | null> => {
+  return backendFetch<InvoiceItemUpdatable>(`/invoice-items/${itemId}`, {
+    notFoundAsNull: true,
+  });
 };
 
-export const updateTransactionInfo = async ({ code, data }: {code: string, data: TransactionInfo}): Promise<void> => {
-  try {
-    await prisma.invoice.update({
-      where: { id: code },
-      data: {
-        transactionInfo: {
-          paymentMethod: data.paymentMethod,
-          bank: data.bank,
-          paymentChannel: data.paymentChannel,
-          receiptNumber: data.receiptNumber,
-        },
-      },
-    })
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+export const updateInvoiceInfo = async ({ code, data }: { code: string; data: InvoiceInfo }): Promise<void> => {
+  await backendFetch<void>(`/invoices/${code}/invoice-info`, {
+    method: 'PATCH',
+    body: data as Record<string, unknown>,
+  });
 };
 
-export const updateLegalRepresentativeInfo = async ({ code, data }: {code: string, data: LegalRepresentativeInfo}): Promise<void> => {
-  try {
-    await prisma.invoice.update({
-      where: { id: code },
-      data: {
-        legalRepresentativeInfo: {
-          fullName: data.fullName,
-          position: data.position,
-          nationalId: data.nationalId,
-        },
-      },
-    })
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+export const updateSupplierInfo = async ({ code, data }: { code: string; data: SupplierInfo }): Promise<void> => {
+  await backendFetch<void>(`/invoices/${code}/supplier-info`, {
+    method: 'PATCH',
+    body: data as Record<string, unknown>,
+  });
 };
 
-export const updateInvoiceItemInfo = async ({ itemId, data }: {
-  itemId: string,
-  data: Partial<InvoiceItemUpdatable>
+export const updateTransactionInfo = async ({ code, data }: { code: string; data: TransactionInfo }): Promise<void> => {
+  await backendFetch<void>(`/invoices/${code}/transaction-info`, {
+    method: 'PATCH',
+    body: data as Record<string, unknown>,
+  });
+};
+
+export const updateLegalRepresentativeInfo = async ({
+  code,
+  data,
+}: {
+  code: string;
+  data: LegalRepresentativeInfo;
 }): Promise<void> => {
-  try {
-    await prisma.invoiceItem.update({
-    where: { id: itemId },
-    data: {
-      ...(data.itemCode !== undefined ? { itemCode: data.itemCode } : {}),
-      ...(data.brand !== undefined ? { brand: data.brand } : {}),
-      ...(data.model !== undefined ? { model: data.model } : {}),
-      ...(data.commercialName !== undefined ? { commercialName: data.commercialName } : {}),
-      ...(data.description !== undefined ? { description: data.description } : {}),
-      ...(data.code !== undefined ? { code: data.code } : {}),
-      ...(data.material !== undefined ? { material: data.material } : {}),
-      ...(data.mainUse !== undefined ? { mainUse: data.mainUse } : {}),
-      ...(data.unitType !== undefined ? { unitType: data.unitType } : {}),
-      ...(data.countryOfOrigin !== undefined ? { countryOfOrigin: data.countryOfOrigin } : {}),
-      ...(data.countryOfAcquisition !== undefined ? { countryOfAcquisition: data.countryOfAcquisition } : {}),
-      ...(data.condition !== undefined ? { condition: data.condition } : {}),
-      ...(data.unitPrice !== undefined ? { unitPrice: data.unitPrice } : {}),
-      ...(data.totalPrice !== undefined ? { totalPrice: data.totalPrice } : {}),
-      ...(data.suggestedHsCode !== undefined ? { suggestedHsCode: data.suggestedHsCode } : {}),
-
-    },
-  })
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+  await backendFetch<void>(`/invoices/${code}/legal-representative-info`, {
+    method: 'PATCH',
+    body: data as Record<string, unknown>,
+  });
 };
 
-export const deleteInvoiceItemInfo = async ({ itemId }: {
-  itemId: string,
+export const updateInvoiceItemInfo = async ({
+  itemId,
+  data,
+}: {
+  itemId: string;
+  data: Partial<InvoiceItemUpdatable>;
 }): Promise<void> => {
-  try {
-    await prisma.invoiceItem.delete({
-    where: { id: itemId }
-  })
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
+  await backendFetch<void>(`/invoice-items/${itemId}`, {
+    method: 'PATCH',
+    body: data as Record<string, unknown>,
+  });
+};
 
-    throw new Error(message);
-  }
+export const deleteInvoiceItemInfo = async ({ itemId }: { itemId: string }): Promise<void> => {
+  await backendFetch<void>(`/invoice-items/${itemId}`, {
+    method: 'DELETE',
+  });
 };
 
 export const createManyVerifications = async (request: CreateManyVerificationsRequest): Promise<void> => {
-  const response = await apiVerifications.post('/v1/secure/verifications/create-many', {
-    key: request.key,
-    authorId: request.authorId,
-    organizationId: request.organizationId,
+  await backendFetch<void>('/verifications/create-many', {
+    method: 'POST',
+    body: {
+      key: request.key,
+      authorId: request.authorId,
+      organizationId: request.organizationId,
+    },
+  });
+};
+
+export const requestInvoiceProcessing = async (
+  request: RequestInvoiceProcessingRequest,
+): Promise<RequestInvoiceProcessingResponse> => {
+  const formData = new FormData();
+
+  formData.append('invoiceNumber', request.invoiceNumber);
+  formData.append('invoice', request.files.invoiceFile);
+
+  request.files.productPhotosFile?.forEach((file) => {
+    formData.append('productPhotos', file);
   });
 
-  return response.data;
+  request.files.extraInfoFile?.forEach((file) => {
+    formData.append('extraInfo', file);
+  });
+
+  return backendFetch<RequestInvoiceProcessingResponse>('/invoices/request-verifications', {
+    method: 'POST',
+    body: formData,
+  });
 };
 
-export const postSendFilesToN8n = async (request: PostSendFilesToN8nRequest): Promise<void> => {
-  const fd = new FormData();
-
-  fd.append('1_invoice', request.files.invoiceFile);
-
-  if (request.files?.productPhotosFile) {
-    request.files?.productPhotosFile.forEach((file, index)=>fd.append(`${index}_productPhotos`, file))
-    // fd.append('1_productPhotos', request.files.productPhotosFile[0]);
-  }
-
-  if (request.files.extraInfoFile) {
-    // fd.append('1_extraInfo', request.files.extraInfoFile[0]);
-    request.files.extraInfoFile.forEach((file, index)=>fd.append(`${index}_extraInfo`, file))
-  }
-    const response = await apiVerifications.post(ServerConfig.webhookPath,
-  fd,
-  {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-      'invoice-id': request.invoiceId,
-      'invoice-number': request.invoiceNumber
-    },
-  }
-    );
-    return response.data;
-};
-
-export const getCheckBatchStatusById = async (request: { invoiceId: string }): Promise<GenerateSignedGetUrlResponse> => {
-  try {
-    const response = await apiVerifications.post('/v1/secure/verifications/check-batch-status-by-id', {
+export const getCheckBatchStatusById = async (request: {
+  invoiceId: string;
+}): Promise<GenerateSignedGetUrlResponse> => {
+  return backendFetch<GenerateSignedGetUrlResponse>('/verifications/check-batch-status-by-id', {
+    method: 'POST',
+    body: {
       invoiceId: request.invoiceId,
-    });
-
-    return response.data;
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+    },
+  });
 };
 
 export const generateSignedGetUrl = async (
   request: GenerateSignedGetUrlRequest,
 ): Promise<GenerateSignedGetUrlResponse> => {
-  try {
-    const response = await apiVerifications.post('/v1/secure/verifications/generate-signed-get-url', {
+  return backendFetch<GenerateSignedGetUrlResponse>('/verifications/generate-signed-get-url', {
+    method: 'POST',
+    body: {
       key: request.key,
       bucket: request.bucket,
-    });
-
-    return response.data;
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+    },
+  });
 };
 
 export const generateSignedPutUrl = async (
   request: GenerateSignedPutUrlRequest,
 ): Promise<GenerateSignedPutUrlResponse> => {
-  try {
-    const response = await apiVerifications.post('/v1/secure/verifications/generate-signed-put-url', {
+  return backendFetch<GenerateSignedPutUrlResponse>('/verifications/generate-signed-put-url', {
+    method: 'POST',
+    body: {
       fileName: request.fileName,
       folder: request.folder,
-    });
-
-    return response.data;
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-
-    throw new Error(message);
-  }
+    },
+  });
 };
 
 export const generateDefaultReport = async (): Promise<GenerateReportResponse> => {
+  const session = await getSession();
 
-  try {
-    const session = await getSession();
-    const response = await apiVerifications.post(
-      '/v1/reports/generate/default',
-      {},
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-report-notification': 'PUSH',
-          'x-push-channel': 'reports-channel',
-          'x-user-role': 'ROBOT',
-          'x-push-event': 'report-generated',
-          'x-author-id': session?.user.id,
-          'x-organization-id': session?.organization.id,
-        },
-        auth: {
-          username: 'robot',
-          password: 'XgK80IkcxtUbzUwHCkUyRVjsTybu',
-        },
-      }
-    );
-
-    return response.data;
-  } catch (error) {
-    const message = _.get(error, 'response.data.message', (error as Error).message);
-    throw new Error(message);
-  }
+  return backendFetch<GenerateReportResponse>('/reports/generate/default', {
+    method: 'POST',
+    body: {
+      authorId: session?.user.id,
+      organizationId: session?.organization.id,
+    },
+  });
 };
