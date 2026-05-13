@@ -1,11 +1,12 @@
 import { translation } from '@/app/i18n';
 // import { Badge } from '@/components/ui/badge';
 import { Table, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 // import prisma from '@/lib/prisma';
 
-export default async function ViewUsers({ organizationId }: { organizationId: number }) {
+export default async function ViewUsers({ organizationId }: { organizationId: string }) {
   const { t } = await translation('es', 'users');
-  console.log(organizationId)
+  console.log(organizationId);
   // const users = await prisma.user.findMany({
   //   where: {
   //     organizationsUsers: {

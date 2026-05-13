@@ -1,5 +1,7 @@
 'use server';
 
+import { getBackendAccessToken } from './session';
+
 export type BackendUser = {
   id: string;
   email: string;
@@ -31,8 +33,16 @@ const readResponse = async (response: Response) => {
 };
 
 export const backendFetch = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
+  const headers = new Headers(options.headers);
+  const accessToken = await getBackendAccessToken();
+
+  if (accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  }
+
   const response = await fetch(buildBackendUrl(path), {
     ...options,
+    headers,
     cache: 'no-store',
   });
   const data = await readResponse(response);

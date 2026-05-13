@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import { findManyInvoices } from '../lib/api';
 import { backendApiErrorMessage, isUnauthorizedBackendApiError } from '../lib/backend-error';
-import { ViewVerification } from './buttons';
 
 const dateFormat = (raw: string): string => {
   const jsDate = new Date(raw);
@@ -17,7 +16,13 @@ const dateFormat = (raw: string): string => {
   return DateTime.fromJSDate(jsDate).setZone('America/Lima').toFormat('dd/LL/yyyy HH:mm');
 };
 
-export default async function VerificationList(
+export enum InvoiceState {
+  PENDING = 'PENDIENTE',
+  DONE = 'PROCESADO',
+  ERROR = 'ERROR',
+}
+
+export default async function TranscriptionList(
   {
     // userId,
     // roleId,
@@ -28,7 +33,7 @@ export default async function VerificationList(
     organizationId: string;
   },
 ) {
-  const { t } = await translation('es', 'verifications');
+  const { t } = await translation('es', 'transcriptions');
 
   // const abilities = await ability(roleId);
 
@@ -58,9 +63,9 @@ export default async function VerificationList(
           <TableHeader>
             <TableRow>
               {/* <TableHead>{t('verificationList.table.header.invoiceId')}</TableHead> */}
-              <TableHead>{t('verificationList.table.header.invoiceCode')}</TableHead>
-              <TableHead>{t('verificationList.table.header.createdAt')}</TableHead>
-              <TableHead align='center'>{t('verificationList.table.header.detail')}</TableHead>
+              <TableHead>{t('transcriptionList.table.header.invoiceCode')}</TableHead>
+              <TableHead>{t('transcriptionList.table.header.createdAt')}</TableHead>
+              <TableHead>{t('transcriptionList.table.header.state')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -70,9 +75,7 @@ export default async function VerificationList(
                 <TableCell>{invoice.invoiceCode}</TableCell>
                 {/* <TableCell>{invoice.legalRepresentativeInfo?.fullName}</TableCell> */}
                 <TableCell>{dateFormat(invoice.createdAt)}</TableCell>
-                <TableCell className='pl-8'>
-                  <ViewVerification code={invoice?.id?.toString()} />
-                </TableCell>
+                <TableCell>{InvoiceState[invoice.state as keyof typeof InvoiceState]}</TableCell>
               </TableRow>
             ))}
           </TableBody>

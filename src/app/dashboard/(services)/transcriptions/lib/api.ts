@@ -151,7 +151,7 @@ const backendFetch = async <T>(path: string, options: RequestOptions = {}): Prom
 };
 
 export const findManyInvoices = async (): Promise<InvoiceType[]> => {
-  return backendFetch<InvoiceType[]>('/invoices');
+  return backendFetch<InvoiceType[]>('/invoices/transcriptions');
 };
 
 export const findInvoiceDetail = async ({

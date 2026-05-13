@@ -1,7 +1,6 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import Form from 'next/form';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useActionState, useEffect } from 'react';
@@ -23,6 +22,7 @@ export default function LoginForm() {
   const [state, formAction, pending] = useActionState(login, initialState);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const sessionStatus = searchParams.get('session');
 
   useEffect(() => {
     if (state.timestamp) {
@@ -33,13 +33,21 @@ export default function LoginForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.timestamp, toast]);
 
+  useEffect(() => {
+    if (sessionStatus !== 'expired') return;
+
+    toast('Sesion expirada', {
+      description: 'Vuelve a iniciar sesion para continuar.',
+    });
+  }, [sessionStatus]);
+
   return (
     <>
       <div className='grid gap-2 text-center'>
         <h1 className='text-3xl font-bold'>{t('title')}</h1>
         <p className='text-balance text-muted-foreground'>{t('description')}</p>
       </div>
-      <Form action={formAction} className='grid gap-4'>
+      <form action={formAction} className='grid gap-4'>
         <div className='grid gap-2'>
           <div className='flex items-center'>
             <Label htmlFor='email'>{t('form.email.label')}</Label>
@@ -94,7 +102,7 @@ export default function LoginForm() {
           {pending && <Loader2 className='h-5 w-5 animate-spin' />}
           {t('form.submit')}
         </Button>
-      </Form>
+      </form>
     </>
   );
 }

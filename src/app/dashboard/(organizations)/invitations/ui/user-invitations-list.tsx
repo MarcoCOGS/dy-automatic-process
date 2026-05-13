@@ -1,12 +1,12 @@
 // import { DateTime } from 'luxon';
-
 import { translation } from '@/app/i18n';
 import { Table, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 // import prisma from '@/lib/prisma';
 
-export default async function UserInvitationsList({ organizationId }: { organizationId: number }) {
+export default async function UserInvitationsList({ organizationId }: { organizationId: string }) {
   const { t } = await translation('es', 'invitations');
-  console.log(organizationId)
+  console.log(organizationId);
   // const invitations = await prisma.invitation.findMany({
   //   where: {
   //     organizationId,
