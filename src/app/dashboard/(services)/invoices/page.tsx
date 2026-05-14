@@ -6,8 +6,22 @@ import { getSession } from '@/lib/session';
 // import RequestVerifications from './ui/request-verifications';
 import VerificationList from './ui/verification-list';
 
-export default async function Page() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const parsePositiveIntegerParam = (value: string | string[] | undefined, fallback: number) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(raw);
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+export default async function Page({ searchParams }: PageProps) {
   const { t } = await translation('es', 'verifications');
+  const params = await searchParams;
+  const page = parsePositiveIntegerParam(params?.page, 1);
+  const limit = parsePositiveIntegerParam(params?.limit, 10);
 
   const session = await getSession();
 
@@ -32,7 +46,13 @@ export default async function Page() {
             {abilities.can('create-many', 'verifications') && <RequestVerifications />}
           </div>
         </div> */}
-        <VerificationList userId={session.user.id} roleId={session.role.id} organizationId={session.organization.id} />
+        <VerificationList
+          userId={session.user.id}
+          roleId={session.role.id}
+          organizationId={session.organization.id}
+          page={page}
+          limit={limit}
+        />
       </div>
     </div>
   );

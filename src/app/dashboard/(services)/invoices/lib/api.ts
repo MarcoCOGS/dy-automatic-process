@@ -12,8 +12,10 @@ import {
   GenerateSignedPutUrlRequest,
   GenerateSignedPutUrlResponse,
   InvoiceInfo,
+  InvoiceListParams,
   Invoice as InvoiceType,
   LegalRepresentativeInfo,
+  PaginatedResponse,
   RequestInvoiceProcessingRequest,
   RequestInvoiceProcessingResponse,
   SupplierInfo,
@@ -150,8 +152,17 @@ const backendFetch = async <T>(path: string, options: RequestOptions = {}): Prom
   return data as T;
 };
 
-export const findManyInvoices = async (): Promise<InvoiceType[]> => {
-  return backendFetch<InvoiceType[]>('/invoices');
+const buildInvoiceListPath = (path: string, params: InvoiceListParams = {}) => {
+  const searchParams = new URLSearchParams();
+
+  searchParams.set('page', String(params.page ?? 1));
+  searchParams.set('limit', String(params.limit ?? 10));
+
+  return `${path}?${searchParams.toString()}`;
+};
+
+export const findManyInvoices = async (params: InvoiceListParams = {}): Promise<PaginatedResponse<InvoiceType>> => {
+  return backendFetch<PaginatedResponse<InvoiceType>>(buildInvoiceListPath('/invoices', params));
 };
 
 export const findInvoiceDetail = async ({

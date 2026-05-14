@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 
 import { translation } from '@/app/i18n';
 import { BackendRequestError, UnauthorizedSessionHandler } from '@/components/custom/backend-request-error';
+import { ListPagination } from '@/components/custom/list-pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import { findManyInvoices } from '../lib/api';
@@ -17,22 +18,24 @@ const dateFormat = (raw: string): string => {
   return DateTime.fromJSDate(jsDate).setZone('America/Lima').toFormat('dd/LL/yyyy HH:mm');
 };
 
-export default async function VerificationList(
-  {
-    // userId,
-    // roleId,
-    // organizationId,
-  }: {
-    userId: string;
-    roleId: string;
-    organizationId: string;
-  },
-) {
+export default async function VerificationList({
+  // userId,
+  // roleId,
+  // organizationId,
+  page,
+  limit,
+}: {
+  userId: string;
+  roleId: string;
+  organizationId: string;
+  page: number;
+  limit: number;
+}) {
   const { t } = await translation('es', 'verifications');
 
   // const abilities = await ability(roleId);
 
-  const invoices = await findManyInvoices().catch((error: unknown) => {
+  const invoicesPage = await findManyInvoices({ page, limit }).catch((error: unknown) => {
     if (isUnauthorizedBackendApiError(error)) {
       return { kind: 'unauthorized' as const };
     }
@@ -43,13 +46,15 @@ export default async function VerificationList(
     };
   });
 
-  if (!Array.isArray(invoices) && invoices.kind === 'unauthorized') {
+  if ('kind' in invoicesPage && invoicesPage.kind === 'unauthorized') {
     return <UnauthorizedSessionHandler />;
   }
 
-  if (!Array.isArray(invoices) && invoices.kind === 'error') {
-    return <BackendRequestError description={invoices.message} />;
+  if ('kind' in invoicesPage && invoicesPage.kind === 'error') {
+    return <BackendRequestError description={invoicesPage.message} />;
   }
+
+  const invoices = invoicesPage.data;
 
   return (
     <>
@@ -64,19 +69,28 @@ export default async function VerificationList(
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice.id}>
-                {/* <TableCell>{invoice.id}</TableCell> */}
-                <TableCell>{invoice.invoiceCode}</TableCell>
-                {/* <TableCell>{invoice.legalRepresentativeInfo?.fullName}</TableCell> */}
-                <TableCell>{dateFormat(invoice.createdAt)}</TableCell>
-                <TableCell className='pl-8'>
-                  <ViewVerification code={invoice?.id?.toString()} />
+            {invoices.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className='h-24 text-center text-muted-foreground'>
+                  No hay facturas comerciales para mostrar.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              invoices.map((invoice) => (
+                <TableRow key={invoice.id}>
+                  {/* <TableCell>{invoice.id}</TableCell> */}
+                  <TableCell>{invoice.invoiceCode}</TableCell>
+                  {/* <TableCell>{invoice.legalRepresentativeInfo?.fullName}</TableCell> */}
+                  <TableCell>{dateFormat(invoice.createdAt)}</TableCell>
+                  <TableCell className='pl-8'>
+                    <ViewVerification code={invoice?.id?.toString()} />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
+        <ListPagination basePath='/dashboard/invoices' meta={invoicesPage.meta} itemCount={invoices.length} />
       </div>
       {/* <div className='flex items-center justify-end space-x-2 py-4'>
         <div className='space-x-2'>

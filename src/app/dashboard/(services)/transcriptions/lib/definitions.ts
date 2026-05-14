@@ -6,6 +6,25 @@ export interface FindManyVerificationsRequest {
   readonly organizationId?: string;
 }
 
+export interface PaginationMeta {
+  readonly page: number;
+  readonly limit: number;
+  readonly total: number;
+  readonly totalPages: number;
+  readonly hasNextPage: boolean;
+  readonly hasPreviousPage: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  readonly data: T[];
+  readonly meta: PaginationMeta;
+}
+
+export interface InvoiceListParams {
+  readonly page?: number;
+  readonly limit?: number;
+}
+
 export interface CreateManyVerificationsRequest {
   readonly key: string;
   readonly authorId: string;
