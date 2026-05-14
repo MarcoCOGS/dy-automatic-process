@@ -1,47 +1,46 @@
 'use server';
 
 import { auth } from '@/auth';
-
-// import prisma from './prisma';
+import { nextDebugLog } from '@/lib/next-debug-log';
 
 export async function getSession() {
   const session = await auth();
-  // console.log('aca session', session)
 
   const userId = session?.user?.id;
   const orgId = session?.user?.orgId;
 
   if (!userId || !orgId) {
+    nextDebugLog('session', 'getSession:missing-required-fields', {
+      hasSession: Boolean(session),
+      hasUserId: Boolean(userId),
+      hasOrganizationId: Boolean(orgId),
+      hasAccessToken: Boolean(session?.accessToken),
+    });
     return undefined;
   }
 
-  const user = { id: 1, firstName: 'Moon', lastName: 'Global', email: 'n8nmoong@hotmail.com', organizationsUsers: [{ organizationId: 1, roleId: 1 }] };
+  nextDebugLog('session', 'getSession:success', {
+    userId,
+    organizationId: orgId,
+    hasAccessToken: Boolean(session?.accessToken),
+  });
 
-  // const user = await prisma.user.findUnique({
-  //   where: {
-  //     id: parseInt(userId),
-  //   },
-  //   include: {
-  //     organizationsUsers: {
-  //       where: {
-  //         organizationId: parseInt(orgId),
-  //       },
-  //     },
-  //   },
-  // });
-  // console.log('acaaaaa')
-  if (!user) {
-    // console.log('aca ddd')
-    return null;
-  }
-  // console.log('aca 1',  {
-  //   user: { id: user.id },
-  //   organization: { id: user.organizationsUsers[0].organizationId },
-  //   role: { id: user.organizationsUsers[0].roleId },
-  // })
   return {
-    user: { id: user.id },
-    organization: { id: user.organizationsUsers[0].organizationId },
-    role: { id: user.organizationsUsers[0].roleId },
+    user: { id: userId },
+    organization: { id: orgId },
+    role: { id: '1' },
   };
+}
+
+export async function getBackendAccessToken() {
+  const session = await auth();
+
+  nextDebugLog('session', 'getBackendAccessToken:result', {
+    hasSession: Boolean(session),
+    hasAccessToken: Boolean(session?.accessToken),
+    userId: session?.user?.id,
+    organizationId: session?.user?.orgId,
+  });
+
+  return session?.accessToken;
 }

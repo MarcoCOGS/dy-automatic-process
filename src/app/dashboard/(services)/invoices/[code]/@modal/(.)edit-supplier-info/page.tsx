@@ -1,113 +1,120 @@
+import { notFound } from 'next/navigation';
 
+import { BackendRequestError, UnauthorizedSessionHandler } from '@/components/custom/backend-request-error';
 
-import { notFound } from 'next/navigation'
-import { findInvoiceDetail } from '../../../lib/api'
-import { SupplierInfo } from '../../../lib/definitions'
-import { SubmitAndClose } from '../../../ui/components/edit-supplier-info/SubmitAndClose'
+import { findInvoiceDetail } from '../../../lib/api';
+import { backendApiErrorMessage, isUnauthorizedBackendApiError } from '../../../lib/backend-error';
+import { SupplierInfo } from '../../../lib/definitions';
+import { SubmitAndClose } from '../../../ui/components/edit-supplier-info/SubmitAndClose';
 
+export default async function EditSupplierInfoPage({ params }: { params: Promise<{ code: string }> }) {
+  const params2 = await params;
+  const code = params2.code;
+  const invoiceDetail = await findInvoiceDetail({ code: code }).catch((error: unknown) => {
+    if (isUnauthorizedBackendApiError(error)) {
+      return { kind: 'unauthorized' as const };
+    }
 
-export default async function EditSupplierInfoPage({
-  params,
-}: {
-  params: Promise<{ code: string }>
-  }) {
-  const params2 = await params
-  const code = params2.code
-  const invoiceDetail = await findInvoiceDetail({ code: code })
+    return {
+      kind: 'error' as const,
+      message: backendApiErrorMessage(error),
+    };
+  });
 
-  if (!invoiceDetail) notFound()
+  if (invoiceDetail && 'kind' in invoiceDetail && invoiceDetail.kind === 'unauthorized') {
+    return (
+      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+        <div className='w-full max-w-lg rounded-xl bg-white p-6 shadow-xl'>
+          <UnauthorizedSessionHandler />
+        </div>
+      </div>
+    );
+  }
 
-  const info: SupplierInfo = invoiceDetail.supplierInfo as SupplierInfo
+  if (invoiceDetail && 'kind' in invoiceDetail && invoiceDetail.kind === 'error') {
+    return (
+      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+        <div className='w-full max-w-lg rounded-xl bg-white p-6 shadow-xl'>
+          <BackendRequestError description={invoiceDetail.message} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!invoiceDetail) notFound();
+
+  const info: SupplierInfo = invoiceDetail.supplierInfo as SupplierInfo;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl w-full max-w-lg p-6 space-y-4 shadow-xl">
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+      <div className='w-full max-w-lg space-y-4 rounded-xl bg-white p-6 shadow-xl'>
+        <h2 className='text-lg font-semibold'>Editar Información de proveedor</h2>
 
-        <h2 className="text-lg font-semibold">
-          Editar Información de proveedor
-        </h2>
-
-        <form
-              className="space-y-4">
-
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Vinculación
-            </label>
+        <form className='space-y-4'>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Vinculación</label>
             <input
-              name="affiliation"
+              name='affiliation'
               defaultValue={info?.affiliation ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Razón Social
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Razón Social</label>
             <input
-              name="legalName"
+              name='legalName'
               defaultValue={info?.legalName ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Domicilio
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Domicilio</label>
             <input
-              name="address"
+              name='address'
               defaultValue={info?.address ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Ciudad / País
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Ciudad / País</label>
             <input
-              name="cityCountry"
+              name='cityCountry'
               defaultValue={info?.cityCountry ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Contacto
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Contacto</label>
             <input
-              name="contactName"
+              name='contactName'
               defaultValue={info?.contactName ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Teléfono
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Teléfono</label>
             <input
-              name="phoneNumber"
+              name='phoneNumber'
               defaultValue={info?.phoneNumber ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Condición
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Condición</label>
             <input
-              name="condition"
+              name='condition'
               defaultValue={info?.condition ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className='flex justify-end gap-3 pt-4'>
             {/* <Button variant="secondary" asChild>
               <a href={`/dashboard/invoices/${code}`}>
                 Cancelar
@@ -119,9 +126,8 @@ export default async function EditSupplierInfoPage({
             </Button> */}
             <SubmitAndClose code={code} />
           </div>
-
         </form>
       </div>
     </div>
-  )
+  );
 }

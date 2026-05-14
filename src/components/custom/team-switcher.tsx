@@ -25,12 +25,12 @@ export function TeamSwitcher({
   activeTeamId,
 }: {
   teams: {
-    id: number;
+    id: string;
     name: string;
     logo: React.ElementType;
     plan: string;
   }[];
-  activeTeamId: number;
+  activeTeamId: string;
 }) {
   const { t } = useTranslation('es');
   const { isMobile } = useSidebar();
@@ -39,7 +39,7 @@ export function TeamSwitcher({
   const activeTeam = teams.find((team) => team.id === activeTeamId)!;
   const { update: sessionUpdate } = useSession();
 
-  function handleChange(teamId: number) {
+  function handleChange(teamId: string) {
     if (activeTeamId === teamId) return;
 
     startTransition(async () => {

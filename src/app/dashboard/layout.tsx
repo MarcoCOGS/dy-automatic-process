@@ -35,7 +35,7 @@ export default async function Layout({ children }: LayoutProps) {
   //   },
   // });
 
-  const organizations = [{ id: '1', name: 'moon', createdAt: new Date(), updatedAt: new Date() }];
+  const organizations = [{ id: session.organization.id, name: 'moon', createdAt: new Date(), updatedAt: new Date() }];
 
   return (
     <SessionProvider>

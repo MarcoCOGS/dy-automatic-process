@@ -2,10 +2,9 @@
 
 // import { DateTime } from 'luxon';
 // import { randomUUID } from 'node:crypto';
-
 // import mail from '@/lib/mail';
-import prisma from '@/lib/prisma';
 // import { ServerConfig } from '@/lib/server-config';
+import { findUserByEmail } from '@/lib/backend-api';
 import { getSession } from '@/lib/session';
 
 export async function inviteUser(email: string): Promise<{ success: boolean; message: string }> {
@@ -18,11 +17,7 @@ export async function inviteUser(email: string): Promise<{ success: boolean; mes
     };
   }
 
-  const foundUser = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
+  const foundUser = await findUserByEmail(email);
 
   if (foundUser) {
     // const isUserAlreadyInOrg = await prisma.organizationUser.findUnique({
@@ -33,7 +28,6 @@ export async function inviteUser(email: string): Promise<{ success: boolean; mes
     //     },
     //   },
     // });
-
     // if (isUserAlreadyInOrg) {
     //   return {
     //     success: false,

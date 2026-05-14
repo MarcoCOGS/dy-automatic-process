@@ -162,7 +162,7 @@ const buildInvoiceListPath = (path: string, params: InvoiceListParams = {}) => {
 };
 
 export const findManyInvoices = async (params: InvoiceListParams = {}): Promise<PaginatedResponse<InvoiceType>> => {
-  return backendFetch<PaginatedResponse<InvoiceType>>(buildInvoiceListPath('/invoices', params));
+  return backendFetch<PaginatedResponse<InvoiceType>>(buildInvoiceListPath('/invoices/transcriptions', params));
 };
 
 export const findInvoiceDetail = async ({

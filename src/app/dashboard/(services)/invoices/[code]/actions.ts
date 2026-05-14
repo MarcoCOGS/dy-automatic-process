@@ -1,39 +1,53 @@
-'use server'
+'use server';
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+
 import {
+  deleteInvoiceItemInfo,
   updateInvoiceInfo,
+  updateInvoiceItemInfo,
+  updateLegalRepresentativeInfo,
   updateSupplierInfo,
   updateTransactionInfo,
-  updateLegalRepresentativeInfo,
-  updateInvoiceItemInfo,
-  deleteInvoiceItemInfo
-} from '../lib/api'
+} from '../lib/api';
+import { backendApiErrorMessage, isUnauthorizedBackendApiError } from '../lib/backend-error';
 
-type State = { ok: boolean; error?: string }
+type State = { ok: boolean; error?: string; unauthorized?: boolean };
+
+const toActionErrorState = (error: unknown): State => {
+  if (isUnauthorizedBackendApiError(error)) {
+    return {
+      ok: false,
+      unauthorized: true,
+      error: 'Sesion expirada. Vuelve a iniciar sesion.',
+    };
+  }
+
+  return {
+    ok: false,
+    error: backendApiErrorMessage(error),
+  };
+};
 
 const getOptionalString = (fd: FormData, key: string): string | undefined => {
-  const v = fd.get(key)
-  if (typeof v !== 'string') return undefined
-  const s = v.trim()
-  return s === '' ? undefined : s
-}
+  const v = fd.get(key);
+  if (typeof v !== 'string') return undefined;
+  const s = v.trim();
+  return s === '' ? undefined : s;
+};
 
-const getOptionalDecimal = (
-  fd: FormData,
-  key: string
-): string | null | undefined => {
-  const v = fd.get(key)
-  if (typeof v !== 'string') return undefined
+const getOptionalDecimal = (fd: FormData, key: string): string | null | undefined => {
+  const v = fd.get(key);
+  if (typeof v !== 'string') return undefined;
 
-  const s = v.trim()
-  if (s === '') return undefined
+  const s = v.trim();
+  if (s === '') return undefined;
 
-  if (Number.isNaN(Number(s))) return undefined
+  if (Number.isNaN(Number(s))) return undefined;
 
-  return s.toString()
-}
+  return s.toString();
+};
 
 // export async function updateInvoiceInfoAction(
 //   code: string,
@@ -63,18 +77,14 @@ const getOptionalDecimal = (
 //   // redirect(`/dashboard/invoices/${code}`)
 // }
 
-export async function updateInvoiceInfoAction(
-  code: string,
-  prevState: State,
-  formData: FormData
-): Promise<State> {
+export async function updateInvoiceInfoAction(code: string, prevState: State, formData: FormData): Promise<State> {
   try {
     const getOptionalString = (key: string) => {
-      const v = formData.get(key)
-      if (typeof v !== 'string') return undefined
-      const s = v.trim()
-      return s === '' ? undefined : s
-    }
+      const v = formData.get(key);
+      if (typeof v !== 'string') return undefined;
+      const s = v.trim();
+      return s === '' ? undefined : s;
+    };
 
     const data = {
       invoiceNumber: getOptionalString('invoiceNumber'),
@@ -82,7 +92,7 @@ export async function updateInvoiceInfoAction(
       acquisitionCountry: getOptionalString('acquisitionCountry'),
       currency: getOptionalString('currency'),
       deliveryPlace: getOptionalString('deliveryPlace'),
-    }
+    };
 
     await updateInvoiceInfo({
       code,
@@ -93,20 +103,16 @@ export async function updateInvoiceInfoAction(
         ...(data.currency ? { currency: data.currency } : {}),
         ...(data.deliveryPlace ? { deliveryPlace: data.deliveryPlace } : {}),
       },
-    })
+    });
 
-    revalidatePath(`/dashboard/invoices/${code}`)
-    return { ok: true }
+    revalidatePath(`/dashboard/invoices/${code}`);
+    return { ok: true };
   } catch (e) {
-    return { ok: false, error: (e as Error).message }
+    return toActionErrorState(e);
   }
 }
 
-export async function updateSupplierInfoAction(
-  code: string,
-  prevState: State,
-  formData: FormData
-): Promise<State> {
+export async function updateSupplierInfoAction(code: string, prevState: State, formData: FormData): Promise<State> {
   try {
     const data = {
       affiliation: getOptionalString(formData, 'affiliation'),
@@ -116,7 +122,7 @@ export async function updateSupplierInfoAction(
       contactName: getOptionalString(formData, 'contactName'),
       phoneNumber: getOptionalString(formData, 'phoneNumber'),
       condition: getOptionalString(formData, 'condition'),
-    }
+    };
     await updateSupplierInfo({
       code,
       data: {
@@ -127,30 +133,25 @@ export async function updateSupplierInfoAction(
         ...(data.contactName ? { contactName: data.contactName } : {}),
         ...(data.phoneNumber ? { phoneNumber: data.phoneNumber } : {}),
         ...(data.condition ? { condition: data.condition } : {}),
-      }
-    })
+      },
+    });
 
-    revalidatePath(`/dashboard/invoices/${code}`)
+    revalidatePath(`/dashboard/invoices/${code}`);
     // redirect(`/dashboard/invoices/${code}`)
-    return { ok: true }
+    return { ok: true };
   } catch (e) {
-    return { ok: false, error: (e as Error).message }
+    return toActionErrorState(e);
   }
 }
 
-
-export async function updateTransactionInfoAction(
-  code: string,
-  prevState: State,
-  formData: FormData
-): Promise<State> {
+export async function updateTransactionInfoAction(code: string, prevState: State, formData: FormData): Promise<State> {
   try {
     const data = {
       paymentMethod: getOptionalString(formData, 'paymentMethod'),
       bank: getOptionalString(formData, 'bank'),
       paymentChannel: getOptionalString(formData, 'apaymentChannels'),
       receiptNumber: getOptionalString(formData, 'receiptNumber'),
-    }
+    };
     await updateTransactionInfo({
       code,
       data: {
@@ -158,44 +159,42 @@ export async function updateTransactionInfoAction(
         ...(data.bank ? { bank: data.bank } : {}),
         ...(data.paymentChannel ? { paymentChannel: data.paymentChannel } : {}),
         ...(data.receiptNumber ? { receiptNumber: data.receiptNumber } : {}),
-      }
-    })
+      },
+    });
 
-    revalidatePath(`/dashboard/invoices/${code}`)
+    revalidatePath(`/dashboard/invoices/${code}`);
     // redirect(`/dashboard/invoices/${code}`)
-      return { ok: true }
+    return { ok: true };
   } catch (e) {
-    return { ok: false, error: (e as Error).message }
+    return toActionErrorState(e);
   }
 }
 
 export async function updateLegalRepresentativeInfoAction(
   code: string,
   prevState: State,
-  formData: FormData
+  formData: FormData,
 ): Promise<State> {
   try {
-
     const data = {
       fullName: getOptionalString(formData, 'fullName'),
       position: getOptionalString(formData, 'position'),
       nationalId: getOptionalString(formData, 'nationalId'),
-    }
-    console.log('aca44', data)
+    };
     await updateLegalRepresentativeInfo({
       code,
       data: {
         ...(data.fullName ? { fullName: data.fullName } : {}),
         ...(data.position ? { position: data.position } : {}),
         ...(data.nationalId ? { nationalId: data.nationalId } : {}),
-      }
-    })
+      },
+    });
 
-    revalidatePath(`/dashboard/invoices/${code}`)
+    revalidatePath(`/dashboard/invoices/${code}`);
     // redirect(`/dashboard/invoices/${code}`)
-        return { ok: true }
+    return { ok: true };
   } catch (e) {
-    return { ok: false, error: (e as Error).message }
+    return toActionErrorState(e);
   }
 }
 
@@ -203,7 +202,7 @@ export async function updateInvoiceItemAction(
   code: string,
   itemId: string,
   prevState: State,
-  formData: FormData
+  formData: FormData,
 ): Promise<State> {
   try {
     const data = {
@@ -223,7 +222,7 @@ export async function updateInvoiceItemAction(
       unitPrice: getOptionalDecimal(formData, 'unitPrice'),
       totalPrice: getOptionalDecimal(formData, 'totalPrice'),
       suggestedHsCode: getOptionalString(formData, 'suggestedHsCode'),
-    }
+    };
     await updateInvoiceItemInfo({
       itemId,
       data: {
@@ -243,23 +242,25 @@ export async function updateInvoiceItemAction(
         ...(data.unitPrice !== undefined ? { unitPrice: data.unitPrice?.toString() } : {}),
         ...(data.totalPrice !== undefined ? { totalPrice: data.totalPrice?.toString() } : {}),
         ...(data.suggestedHsCode ? { suggestedHsCode: data.suggestedHsCode } : {}),
-      }
-    })
+      },
+    });
 
-    revalidatePath(`/dashboard/invoices/${code}`)
+    revalidatePath(`/dashboard/invoices/${code}`);
     // redirect(`/dashboard/invoices/${code}`)
-    return { ok: true }
+    return { ok: true };
   } catch (e) {
-    return { ok: false, error: (e as Error).message }
+    return toActionErrorState(e);
   }
 }
 
-export async function deleteInvoiceItemAction(
-  itemId: string,
-  code: string,
-) {
-  await deleteInvoiceItemInfo({ itemId })
+export async function deleteInvoiceItemAction(itemId: string, code: string): Promise<State> {
+  try {
+    await deleteInvoiceItemInfo({ itemId });
 
-  revalidatePath(`/dashboard/invoices/${code}`)
-  redirect(`/dashboard/invoices/${code}`)
+    revalidatePath(`/dashboard/invoices/${code}`);
+  } catch (e) {
+    return toActionErrorState(e);
+  }
+
+  redirect(`/dashboard/invoices/${code}`);
 }

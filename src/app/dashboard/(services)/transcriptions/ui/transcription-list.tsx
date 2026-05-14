@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import { findManyInvoices } from '../lib/api';
 import { backendApiErrorMessage, isUnauthorizedBackendApiError } from '../lib/backend-error';
-import { ViewVerification } from './buttons';
 
 const dateFormat = (raw: string): string => {
   const jsDate = new Date(raw);
@@ -18,7 +17,13 @@ const dateFormat = (raw: string): string => {
   return DateTime.fromJSDate(jsDate).setZone('America/Lima').toFormat('dd/LL/yyyy HH:mm');
 };
 
-export default async function VerificationList({
+export enum InvoiceState {
+  PENDING = 'PENDIENTE',
+  DONE = 'PROCESADO',
+  ERROR = 'ERROR',
+}
+
+export default async function TranscriptionList({
   // userId,
   // roleId,
   // organizationId,
@@ -31,7 +36,7 @@ export default async function VerificationList({
   page: number;
   limit: number;
 }) {
-  const { t } = await translation('es', 'verifications');
+  const { t } = await translation('es', 'transcriptions');
 
   // const abilities = await ability(roleId);
 
@@ -63,16 +68,16 @@ export default async function VerificationList({
           <TableHeader>
             <TableRow>
               {/* <TableHead>{t('verificationList.table.header.invoiceId')}</TableHead> */}
-              <TableHead>{t('verificationList.table.header.invoiceCode')}</TableHead>
-              <TableHead>{t('verificationList.table.header.createdAt')}</TableHead>
-              <TableHead align='center'>{t('verificationList.table.header.detail')}</TableHead>
+              <TableHead>{t('transcriptionList.table.header.invoiceCode')}</TableHead>
+              <TableHead>{t('transcriptionList.table.header.createdAt')}</TableHead>
+              <TableHead>{t('transcriptionList.table.header.state')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {invoices.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className='h-24 text-center text-muted-foreground'>
-                  No hay facturas comerciales para mostrar.
+                  No hay transcripciones para mostrar.
                 </TableCell>
               </TableRow>
             ) : (
@@ -82,15 +87,13 @@ export default async function VerificationList({
                   <TableCell>{invoice.invoiceCode}</TableCell>
                   {/* <TableCell>{invoice.legalRepresentativeInfo?.fullName}</TableCell> */}
                   <TableCell>{dateFormat(invoice.createdAt)}</TableCell>
-                  <TableCell className='pl-8'>
-                    <ViewVerification code={invoice?.id?.toString()} />
-                  </TableCell>
+                  <TableCell>{InvoiceState[invoice.state as keyof typeof InvoiceState]}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
-        <ListPagination basePath='/dashboard/invoices' meta={invoicesPage.meta} itemCount={invoices.length} />
+        <ListPagination basePath='/dashboard/transcriptions' meta={invoicesPage.meta} itemCount={invoices.length} />
       </div>
       {/* <div className='flex items-center justify-end space-x-2 py-4'>
         <div className='space-x-2'>

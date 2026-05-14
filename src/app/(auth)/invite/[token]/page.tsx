@@ -1,8 +1,7 @@
 // import { OrganizationUserStates } from '@prisma/client';
 // import { DateTime } from 'luxon';
-
 import PageMessage from '@/components/custom/page-message';
-import prisma from '@/lib/prisma';
+import { findUserByEmail } from '@/lib/backend-api';
 
 import RegisterUserForm from '../ui/register-user-form';
 
@@ -23,11 +22,7 @@ export default async function Page() {
   //   return PageMessage('Invalid invitation');
   // }
 
-  const foundUser = await prisma.user.findUnique({
-    where: {
-      email: 'foundInvitation.email',
-    },
-  });
+  const foundUser = await findUserByEmail('foundInvitation.email');
 
   if (foundUser) {
     // const isUserAlreadyInOrg = await prisma.organizationUser.findUnique({

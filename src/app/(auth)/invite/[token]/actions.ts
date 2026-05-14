@@ -3,8 +3,7 @@
 // import { OrganizationUserStates, UserStates } from '@prisma/client';
 // import argon2 from 'argon2';
 // import { DateTime } from 'luxon';
-
-import prisma from '@/lib/prisma';
+import { findUserByEmail } from '@/lib/backend-api';
 
 type Data = {
   token: string;
@@ -16,7 +15,7 @@ type Data = {
 
 export async function registerUser(data: Data) {
   if (data) {
-    console.log('')
+    console.log('');
   }
   // const foundInvitation = await prisma.invitation.findUnique({
   //   where: {
@@ -35,11 +34,7 @@ export async function registerUser(data: Data) {
   //   };
   // }
 
-  const foundUser = await prisma.user.findUnique({
-    where: {
-      email: 'foundInvitation.email',
-    },
-  });
+  const foundUser = await findUserByEmail('foundInvitation.email');
 
   if (foundUser) {
     return {
@@ -52,33 +47,7 @@ export async function registerUser(data: Data) {
     //     name: 'partner',
     //   },
     // });
-
-    await prisma.$transaction([
-      // prisma.user.create({
-      //   data: {
-      //     email: foundInvitation.email,
-      //     firstName: data.firstName,
-      //     lastName: data.lastName,
-      //     password: await argon2.hash(data.password),
-      //     state: UserStates.ACTIVE,
-      //     organizationsUsers: {
-      //       create: {
-      //         organizationId: foundInvitation.organizationId,
-      //         roleId: role.id,
-      //         state: OrganizationUserStates.ACTIVE,
-      //       },
-      //     },
-      //   },
-      // }),
-      // prisma.invitation.update({
-      //   where: {
-      //     id: foundInvitation.id,
-      //   },
-      //   data: {
-      //     acceptedAt: new Date(),
-      //   },
-      // }),
-    ]);
+    // Invitation persistence is handled by the NestJS backend.
   }
 
   return {

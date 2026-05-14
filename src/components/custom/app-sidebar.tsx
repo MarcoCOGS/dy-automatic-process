@@ -2,24 +2,26 @@
 
 import { FileCheck2, FlaskConical, GalleryVerticalEnd, Link, MailPlus, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-type Organization = {
-    name: string;
-    id: string;
-    createdAt: Date;
-    updatedAt: Date;
-}
+
 // import { useTranslation } from '@/app/i18n/client';
 import { NavProjects } from '@/components/custom/nav-projects';
 import { NavUser } from '@/components/custom/nav-user';
 import { TeamSwitcher } from '@/components/custom/team-switcher';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 
+type Organization = {
+  name: string;
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export function AppSidebar({
   organizations,
   activeOrganizationId,
 }: {
   organizations: Organization[];
-  activeOrganizationId: number;
+  activeOrganizationId: string;
 }) {
   // const { t } = useTranslation('es');
   const { data: session } = useSession();
@@ -33,7 +35,12 @@ export function AppSidebar({
 
   const services = [
     {
-      name: 'Procesar Facturas',
+      name: 'Transcripción de Facturas',
+      url: '/dashboard/transcriptions',
+      icon: FileCheck2,
+    },
+    {
+      name: 'Facturas',
       url: '/dashboard/invoices',
       icon: FileCheck2,
     },
@@ -65,13 +72,7 @@ export function AppSidebar({
   return (
     <Sidebar collapsible='icon'>
       <SidebarHeader>
-        <TeamSwitcher
-          teams={teams.map(team => ({
-            ...team,
-            id: parseInt(team.id, 10),
-          }))}
-          activeTeamId={activeOrganizationId}
-        />
+        <TeamSwitcher teams={teams} activeTeamId={activeOrganizationId} />
       </SidebarHeader>
       <SidebarContent>
         <NavProjects title='Servicios' projects={services} />

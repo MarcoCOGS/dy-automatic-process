@@ -1,96 +1,106 @@
+import { notFound } from 'next/navigation';
 
+import { BackendRequestError, UnauthorizedSessionHandler } from '@/components/custom/backend-request-error';
 
-import { notFound } from 'next/navigation'
-import { findInvoiceDetail } from '../../../lib/api'
-import { InvoiceInfo } from '../../../lib/definitions'
-import { SubmitAndClose } from '../../../ui/components/edit-invoice-info/SubmitAndClose'
+import { findInvoiceDetail } from '../../../lib/api';
+import { backendApiErrorMessage, isUnauthorizedBackendApiError } from '../../../lib/backend-error';
+import { InvoiceInfo } from '../../../lib/definitions';
+import { SubmitAndClose } from '../../../ui/components/edit-invoice-info/SubmitAndClose';
 
+export default async function EditInvoiceInfoPage({ params }: { params: Promise<{ code: string }> }) {
+  const params2 = await params;
+  const code = params2.code;
+  const invoiceDetail = await findInvoiceDetail({ code: code }).catch((error: unknown) => {
+    if (isUnauthorizedBackendApiError(error)) {
+      return { kind: 'unauthorized' as const };
+    }
 
-export default async function EditInvoiceInfoPage({
-  params,
-}: {
-  params: Promise<{ code: string }>
-  }) {
-  const params2 = await params
-  const code = params2.code
-  const invoiceDetail = await findInvoiceDetail({ code: code })
+    return {
+      kind: 'error' as const,
+      message: backendApiErrorMessage(error),
+    };
+  });
 
-  if (!invoiceDetail) notFound()
+  if (invoiceDetail && 'kind' in invoiceDetail && invoiceDetail.kind === 'unauthorized') {
+    return (
+      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+        <div className='w-full max-w-lg rounded-xl bg-white p-6 shadow-xl'>
+          <UnauthorizedSessionHandler />
+        </div>
+      </div>
+    );
+  }
 
-  const info: InvoiceInfo = invoiceDetail.invoiceInfo as InvoiceInfo
+  if (invoiceDetail && 'kind' in invoiceDetail && invoiceDetail.kind === 'error') {
+    return (
+      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+        <div className='w-full max-w-lg rounded-xl bg-white p-6 shadow-xl'>
+          <BackendRequestError description={invoiceDetail.message} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!invoiceDetail) notFound();
+
+  const info: InvoiceInfo = invoiceDetail.invoiceInfo as InvoiceInfo;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl w-full max-w-lg p-6 space-y-4 shadow-xl">
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40'>
+      <div className='w-full max-w-lg space-y-4 rounded-xl bg-white p-6 shadow-xl'>
+        <h2 className='text-lg font-semibold'>Editar Información de Factura</h2>
 
-        <h2 className="text-lg font-semibold">
-          Editar Información de Factura
-        </h2>
-
-        <form
-              className="space-y-4">
-
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              N° Factura
-            </label>
+        <form className='space-y-4'>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>N° Factura</label>
             <input
-              name="invoiceNumber"
+              name='invoiceNumber'
               defaultValue={info?.invoiceNumber ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Incoterms
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Incoterms</label>
             <input
-              name="incoterms"
+              name='incoterms'
               defaultValue={info?.incoterms ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              País Adquisición
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>País Adquisición</label>
             <input
-              name="acquisitionCountry"
+              name='acquisitionCountry'
               defaultValue={info?.acquisitionCountry ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Moneda
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Moneda</label>
             <input
-              name="currency"
+              name='currency'
               defaultValue={info?.currency ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">
-              Lugar de Entrega
-            </label>
+          <div className='space-y-1'>
+            <label className='text-sm text-muted-foreground'>Lugar de Entrega</label>
             <input
-              name="deliveryPlace"
+              name='deliveryPlace'
               defaultValue={info?.deliveryPlace ?? ''}
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              className='w-full rounded-md border px-3 py-2 text-sm'
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className='flex justify-end gap-3 pt-4'>
             <SubmitAndClose code={code} />
           </div>
-
         </form>
       </div>
     </div>
-  )
+  );
 }

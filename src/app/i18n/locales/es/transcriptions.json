@@ -1,42 +1,42 @@
 {
-  "verificationStates": {
+  "transcriptionStates": {
     "PENDING": "Pendiente",
     "PROGRESS": "Progreso",
-    "IDENTITY_VERIFICATION": "Verificación de identidad",
+    "IDENTITY_transcription": "Verificación de identidad",
     "DONE": "Terminado",
     "EXPIRED": "Expirado",
     "CANCELED": "Cancelado"
   },
-  "verificationViews": {
+  "transcriptionViews": {
     "START": "Inicio",
     "GPS_GEOLOCATION": "Geolocalización por GPS",
     "HOME_INFORMATION": "Información domiciliaria",
     "CAPTURE_IMAGES": "Captura de imágenes",
-    "IDENTITY_VERIFICATION": "Verificación de identidad",
+    "IDENTITY_transcription": "Verificación de identidad",
     "DASHBOARD": "Dashboard",
     "END": "Fin"
   },
-  "verificationPropertyStatus": {
+  "transcriptionPropertyStatus": {
     "1": "Propia",
     "2": "Alquilada",
     "3": "Familiar"
   },
-  "verificationResidenceDuration": {
+  "transcriptionResidenceDuration": {
     "1": "Menos de 1 año",
     "2": "De 1 a 5 años",
     "3": "Más de 5 años"
   },
-  "verificationResidenceType": {
+  "transcriptionResidenceType": {
     "1": "Casa",
     "2": "Departamento",
     "3": "Habitación",
     "4": "Quinta"
   },
-  "verificationLivesAtAddress": {
+  "transcriptionLivesAtAddress": {
     "1": "Sí",
     "2": "No"
   },
-  "verificationFiles": {
+  "transcriptionFiles": {
     "house_number_photo": "Número de puerta",
     "house_front_photo": "Frente de la casa",
     "utility_bill_photo": "Recibo de luz o agua",
@@ -45,17 +45,17 @@
     "selfie_photo": "Foto Selfie",
     "map_distance_image": "Mapa",
     "identity_proof_document": "Documento de prueba de identidad",
-    "verification_document": "Documento de verificación"
+    "transcription_document": "Documento de verificación"
   },
-  "verificationList": {
-    "title": "Facturas Comerciales",
-    "description": "",
+  "transcriptionList": {
+    "title": "Transcripcion de Facturas Comerciales",
+    "description": "Carga masiva para generacion de facturas comerciales",
     "table": {
       "header": {
         "invoiceCode": "Codigo de Factura",
         "fullName": "Nombre",
         "createdAt": "Fecha de creación",
-        "detail": "Detalle de Factura"
+        "state": "Estado"
       }
     }
   },
@@ -88,7 +88,7 @@
     }
   },
   "buttons": {
-    "requestVerifications": "Solicitar verificaciones",
+    "requesttranscriptions": "Solicitar verificaciones",
     "download": "Descargar",
     "view": "Ver",
     "request": "Solicitar",
